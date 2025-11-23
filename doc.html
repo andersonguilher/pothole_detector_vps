@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Documentação do Pothole Detector</title>
+</head>
+<body>
+<h1>Pothole Detector – Documentação Completa</h1>
+<p>Aplicação Python FastAPI para detecção de buracos em vias urbanas utilizando YOLOv8.</p>
+
+<h2>Arquitetura Geral</h2>
+<pre>
+📂 detector/
+ ├── main.py
+ ├── templates/
+ │    └── upload.html
+ ├── static/
+ │    └── style.css (opcional)
+ └── requirements.txt
+</pre>
+
+<h2>Configuração de Proxy Reverso (Nginx)</h2>
+<pre>
+location /detector/ {
+    proxy_pass http://127.0.0.1:8000/;  # A barra no final é importante
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+}
+</pre>
+
+<h2>Requisitos</h2>
+<pre>
+fastapi
+uvicorn
+jinja2
+python-multipart
+ultralytics
+opencv-python
+numpy
+</pre>
+
+<h2>Execução</h2>
+<pre>
+uvicorn main:app --host 0.0.0.0 --port 8000
+</pre>
+
+</body>
+</html>

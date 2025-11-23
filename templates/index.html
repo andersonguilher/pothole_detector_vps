@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConservApp - Detecção Inteligente</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-slate-100 min-h-screen font-sans">
+
+    <nav class="bg-blue-900 text-white shadow-lg">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-road text-yellow-400 text-2xl"></i>
+                <span class="text-xl font-bold tracking-wide">ConservApp AI</span>
+            </div>
+            <div class="text-sm opacity-80">22ª Gerência de Conservação</div>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto mt-10 p-4">
+
+        <div class="text-center mb-10">
+            <h1 class="text-3xl font-bold text-slate-800">Detecção de Falhas no Pavimento</h1>
+            <p class="text-slate-500 mt-2">Envie uma foto para análise automática via IA</p>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-md p-8 text-center transition-all duration-300 border-2 border-dashed border-slate-300 hover:border-blue-500"
+            id="drop-zone">
+
+            <input type="file" id="file-input-camera" class="hidden" accept="image/*" capture="camera">
+            <input type="file" id="file-input-gallery" class="hidden" accept="image/*">
+
+            <div id="upload-content">
+                <div
+                    class="mb-4 text-blue-100 bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto">
+                    <i class="fa-solid fa-cloud-arrow-up text-2xl text-white"></i>
+                </div>
+                <h3 class="text-lg font-medium text-slate-700">Selecione a fonte da imagem</h3>
+                <p class="text-sm text-slate-400 mt-4">Suporta JPG, PNG</p>
+
+                <div class="mt-6 flex justify-center space-x-4">
+                    <button id="btn-camera"
+                        class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition flex items-center shadow-lg">
+                        <i class="fa-solid fa-camera mr-2"></i> Capturar Foto
+                    </button>
+                    <button id="btn-gallery"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition flex items-center shadow-lg">
+                        <i class="fa-solid fa-folder-open mr-2"></i> Enviar da Galeria
+                    </button>
+                </div>
+            </div>
+
+            <div id="loading" class="hidden">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p class="mt-4 text-blue-600 font-semibold">Analisando pavimento...</p>
+            </div>
+        </div>
+
+        <div id="result-area" class="mt-8 hidden animate-fade-in">
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="bg-slate-800 text-white px-6 py-3 flex justify-between items-center">
+                    <span class="font-semibold"><i class="fa-solid fa-check-circle text-green-400 mr-2"></i>Análise
+                        Concluída</span>
+                    <button onclick="reset()" class="text-sm text-slate-300 hover:text-white">Nova Análise</button>
+                </div>
+                <div class="p-4 bg-slate-200 flex justify-center">
+                    <img id="result-image" src="" alt="Resultado"
+                        class="max-h-[500px] rounded-lg shadow-md border border-slate-300">
+                </div>
+                <div class="p-6">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex-1">
+                            <h4 class="font-bold text-slate-700">Relatório Rápido</h4>
+                            <p class="text-sm text-slate-500">As áreas em <span
+                                    class="text-green-600 font-bold">verde</span> indicam falhas detectadas com alta
+                                probabilidade.</p>
+                        </div>
+                        <a id="download-btn" href="#" download="resultado_conservapp.jpg"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition">
+                            <i class="fa-solid fa-download mr-2"></i> Baixar
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInputCamera = document.getElementById('file-input-camera');
+        const fileInputGallery = document.getElementById('file-input-gallery');
+        const btnCamera = document.getElementById('btn-camera');
+        const btnGallery = document.getElementById('btn-gallery');
+
+        const uploadContent = document.getElementById('upload-content');
+        const loading = document.getElementById('loading');
+        const resultArea = document.getElementById('result-area');
+        const resultImage = document.getElementById('result-image');
+        const downloadBtn = document.getElementById('download-btn');
+
+        // Dispara o input de Câmera
+        btnCamera.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fileInputCamera.click();
+        });
+
+        // Dispara o input de Galeria
+        btnGallery.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fileInputGallery.click();
+        });
+
+
+        // Handle file selection (Ouve os dois inputs)
+        fileInputCamera.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) processFile(e.target.files[0]);
+        });
+
+        fileInputGallery.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) processFile(e.target.files[0]);
+        });
+
+
+        async function processFile(file) {
+            // Show loading
+            uploadContent.classList.add('hidden');
+            loading.classList.remove('hidden');
+            resultArea.classList.add('hidden');
+
+            // Create form data
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                // CORREÇÃO FINAL: Usando o caminho completo /detector/detectar para evitar o erro 404 do Nginx/Apache.
+                const response = await fetch('/detector/detectar', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const imageUrl = URL.createObjectURL(blob);
+
+                    // Show result
+                    resultImage.src = imageUrl;
+                    downloadBtn.href = imageUrl;
+                    resultArea.classList.remove('hidden');
+                } else {
+                    alert('Erro na análise. Tente novamente.');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Erro de conexão com o servidor.');
+            } finally {
+                // Hide loading
+                loading.classList.add('hidden');
+                uploadContent.classList.remove('hidden');
+            }
+        }
+
+        function reset() {
+            resultArea.classList.add('hidden');
+            fileInputCamera.value = '';
+            fileInputGallery.value = '';
+        }
+    </script>
+</body>
+
+</html>
