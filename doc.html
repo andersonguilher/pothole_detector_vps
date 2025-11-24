@@ -4,199 +4,270 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ConservApp AI - Detecção Combinada - Documentação</title>
+    <title>ConservApp AI - Documentação Técnica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
         body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f9;
+            font-family: 'Inter', sans-serif;
         }
 
-        .container {
-            max-width: 900px;
-            margin: auto;
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        .content-section {
+            display: none;
         }
 
-        h1 {
-            color: #1e3a8a;
-            border-bottom: 2px solid #bfdbfe;
-            padding-bottom: 10px;
+        .content-section.active {
+            display: block;
         }
 
-        h2 {
-            color: #374151;
-            border-left: 5px solid #60a5fa;
-            padding-left: 10px;
-            margin-top: 25px;
-        }
-
-        h3 {
-            color: #4b5563;
-            margin-top: 15px;
-        }
-
-        pre {
-            background: #e5e7eb;
-            padding: 15px;
-            border-radius: 6px;
-            overflow-x: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9em;
-            margin-bottom: 20px;
-        }
-
-        code {
-            background: #f3f4f6;
-            padding: 2px 4px;
-            border-radius: 3px;
-        }
-
-        ul {
-            list-style: disc;
-            margin-left: 20px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-
-        th,
-        td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-            font-size: 0.9em;
-        }
-
-        th {
-            background-color: #f9fafb;
-            color: #1f2937;
+        .nav-link.active {
+            background-color: #eef2ff;
+            color: #4338ca;
+            border-left: 3px solid #4f46e5;
         }
     </style>
 </head>
 
-<body>
+<body class="bg-slate-50 text-slate-800">
 
-    <div class="container">
-        <h1>ConservApp AI – Detecção Combinada (FastAPI + YOLOv8)</h1>
-        <p>Aplicação Python FastAPI para detecção de **Buracos e Bueiros** em vias urbanas utilizando uma arquitetura de
-            **Múltiplos Modelos YOLOv8** e cálculos de engenharia para estimativa de reparo.</p>
+    <div class="flex min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-white shadow-md p-4 space-y-2 fixed h-full">
+            <div class="flex items-center space-x-2 p-3 border-b">
+                <i class="fa-solid fa-road text-yellow-400 text-2xl"></i>
+                <span class="text-xl font-bold text-blue-900">ConservApp AI</span>
+            </div>
+            <nav class="flex flex-col space-y-1">
+                <a href="#introducao"
+                    class="nav-link px-3 py-2 rounded-md font-medium text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-house w-6"></i> Introdução
+                </a>
+                <a href="#arquitetura"
+                    class="nav-link px-3 py-2 rounded-md font-medium text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-sitemap w-6"></i> Arquitetura
+                </a>
+                <a href="#backend" class="nav-link px-3 py-2 rounded-md font-medium text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-code w-6"></i> Backend
+                </a>
+                <a href="#frontend" class="nav-link px-3 py-2 rounded-md font-medium text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-display w-6"></i> Frontend
+                </a>
+                <a href="#execucao" class="nav-link px-3 py-2 rounded-md font-medium text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-play w-6"></i> Execução e Deploy
+                </a>
+                <a href="#customizacao"
+                    class="nav-link px-3 py-2 rounded-md font-medium text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-wrench w-6"></i> Customização
+                </a>
+            </nav>
+        </aside>
 
-        <h2>Arquitetura Geral</h2>
-        <pre>
-📂 detector/
- ├── main.py              # Ponto de entrada da aplicação (FastAPI) e lógica de detecção.
+        <!-- Main Content -->
+        <main class="ml-64 flex-1 p-8">
+
+            <!-- Seção Introdução -->
+            <section id="introducao" class="content-section active">
+                <h1 class="text-4xl font-bold text-blue-900 mb-4">Documentação Técnica</h1>
+                <p class="text-lg text-slate-600 mb-6">Visão geral do sistema de detecção de patologias em vias urbanas.
+                </p>
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <p>O <strong>ConservApp AI</strong> é uma solução baseada em Python, FastAPI e YOLOv8, projetada
+                        para identificar e analisar anomalias em vias públicas, como buracos e bueiros danificados. A
+                        aplicação oferece uma interface web para upload de imagens, processa as detecções em tempo real
+                        e gera um relatório técnico com estimativas de reparo.</p>
+                </div>
+            </section>
+
+            <!-- Seção Arquitetura -->
+            <section id="arquitetura" class="content-section">
+                <h2 class="text-3xl font-bold text-blue-900 mb-6">Arquitetura do Sistema</h2>
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h3 class="font-semibold text-lg mb-2">Estrutura de Arquivos</h3>
+                    <pre class="bg-slate-100 p-4 rounded-md text-sm">
+📂 pothole_detector/
+ ├── main.py              # Lógica da API FastAPI e pipeline de detecção
+ ├── models/                # Modelos .pt (YOLOv8)
+ │    ├── buracos_box.pt
+ │    ├── buracos_seg.pt
+ │    └── bueiros_det.pt
  ├── templates/
- │    └── index.html       # Frontend principal para upload e visualização de resultados.
- ├── static/
- │    └── style.css        # Arquivo de estilos CSS (opcional, para customização visual).
- └── requirements.txt     # Lista de dependências Python.
+ │    └── index.html       # Interface do usuário (HTML + TailwindCSS)
+ ├── doc.html               # Esta documentação
+ ├── requirements.txt     # Dependências do projeto
+ └── README.md              # Resumo do projeto
 </pre>
+                    <h3 class="font-semibold text-lg mt-6 mb-2">Fluxo de Dados</h3>
+                    <div class="flex items-center justify-center">
+                        <img src="https://i.imgur.com/8a5zR2s.png" alt="Fluxo de Dados">
+                    </div>
+                </div>
+            </section>
 
-        <h2>Modelos e Pipeline de Detecção (`main.py`)</h2>
-        <p>O backend utiliza três modelos YOLOv8 carregados no início, permitindo a detecção dual e a escolha entre
-            detecção por caixa (Box) ou segmentação (Mask).</p>
+            <!-- Seção Backend -->
+            <section id="backend" class="content-section">
+                <h2 class="text-3xl font-bold text-blue-900 mb-6">Backend (FastAPI)</h2>
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h3 class="font-semibold text-lg mb-2">Endpoint Principal: <code>/detectar</code></h3>
+                    <p>Este endpoint recebe as imagens e as configurações de detecção, retornando um JSON com os
+                        resultados.</p>
+                    <ul class="list-disc list-inside bg-slate-50 p-4 rounded-md mt-4">
+                        <li><strong>Método:</strong> <code>POST</code></li>
+                        <li><strong>Payload:</strong> <code>multipart/form-data</code></li>
+                    </ul>
 
-        <h3>Modelos Utilizados</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Modelo</th>
-                    <th>Arquivo</th>
-                    <th>Finalidade</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Buraco (Box)</td>
-                    <td><code>buracos_box.pt</code></td>
-                    <td>Detecção rápida (Bounding Box) de buracos.</td>
-                </tr>
-                <tr>
-                    <td>Buraco (Máscara)</td>
-                    <td><code>buracos_seg.pt</code></td>
-                    <td>Segmentação precisa para cálculo exato de área.</td>
-                </tr>
-                <tr>
-                    <td>Bueiro</td>
-                    <td><code>bueiros_det.pt</code></td>
-                    <td>Detecção e classificação do estado (Bom, Quebrado, Aberto).</td>
-                </tr>
-            </tbody>
-        </table>
+                    <h4 class="font-semibold mt-4 mb-2">Parâmetros de Entrada</h4>
+                    <table class="w-full text-left border">
+                        <thead class="bg-slate-100">
+                            <tr>
+                                <th class="p-2 border">Parâmetro</th>
+                                <th class="p-2 border">Tipo</th>
+                                <th class="p-2 border">Descrição</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="p-2 border"><code>files</code></td>
+                                <td class="p-2 border">Lista de <code>UploadFile</code></td>
+                                <td class="p-2 border">Imagens a serem processadas.</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2 border"><code>confidence_buraco</code></td>
+                                <td class="p-2 border"><code>float</code></td>
+                                <td class="p-2 border">Confiança mínima para detecção de buracos (0.1-0.9).</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2 border"><code>confidence_bueiro</code></td>
+                                <td class="p-2 border"><code>float</code></td>
+                                <td class="p-2 border">Confiança mínima para detecção de bueiros (0.1-0.9).</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2 border"><code>detection_mode</code></td>
+                                <td class="p-2 border"><code>string</code></td>
+                                <td class="p-2 border">'box' (rápido) ou 'mask' (preciso).</td>
+                            </tr>
+                        </tbody>
+                    </table>
 
-        <h3>Lógica de Negócio (Física)</h3>
-        <p>A aplicação integra cálculos de engenharia civil baseados nas seguintes constantes (definidas no
-            <code>main.py</code>):</p>
-        <ul>
-            <li><code>PIXEL_TO_CM2 = 0.04</code>: Fator de conversão para área de pixel.</li>
-            <li><code>DENSIDADE_CBUQ_TM3 = 2.4</code>: Densidade do CBUQ em $t/m^3$.</li>
-            <li><code>ESPESSURA_CM = 5</code>: Espessura de referência para o cálculo de massa (5 cm).</li>
-        </ul>
+                    <h4 class="font-semibold mt-6 mb-2">Estrutura de Resposta (JSON)</h4>
+                    <pre class="bg-slate-800 text-white p-4 rounded-md text-sm custom-scrollbar">{
+    "batch_results": [
+        {
+            "file_name": "imagem1.jpg",
+            "image_b64": "data:image/jpeg;base64,...",
+            "report_data": [
+                { "id": "#1", "tipo": "Buraco", "detalhe": "0.1234 m²", ... }
+            ],
+            ...
+        }
+    ],
+    "grand_totals": { "m2": "1.2345", "ton": "0.567", "count": 5 }
+}</pre>
+                </div>
+            </section>
 
-        <h3>Resolução de Conflitos (IOU)</h3>
-        <p>É aplicada a lógica de Intersection Over Union (IOU) para garantir a integridade dos dados:</p>
-        <ul>
-            <li>**Bueiro Danificado vs. Buraco:** Se um buraco se sobrepõe a um bueiro danificado (Quebrado/Aberto), o
-                buraco é **descartado** para evitar duplicidade, creditando o dano ao bueiro.</li>
-            <li>**Bueiro Bom vs. Buraco:** Se um buraco se sobrepõe a um bueiro Bom, o bueiro é **descartado**,
-                priorizando o dano do asfalto.</li>
-        </ul>
+            <!-- Seção Frontend -->
+            <section id="frontend" class="content-section">
+                <h2 class="text-3xl font-bold text-blue-900 mb-6">Frontend (HTML + TailwindCSS)</h2>
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <p>A interface é uma página única (SPA) construída com HTML e estilizada com TailwindCSS, o que a
+                        torna responsiva e fácil de manter.</p>
+                    <h3 class="font-semibold text-lg mt-4 mb-2">Principais Componentes da UI:</h3>
+                    <ul class="list-disc list-inside space-y-2">
+                        <li><strong>Painel de Configuração:</strong> Sliders para ajustar a confiança e um seletor para
+                            o modo de detecção.</li>
+                        <li><strong>Área de Upload:</strong> Permite arrastar e soltar ou selecionar arquivos de imagem.
+                        </li>
+                        <li><strong>Relatório de Totais:</strong> Exibe os totais de área danificada, CBUQ estimado e
+                            número de ocorrências.</li>
+                        <li><strong>Grid de Resultados:</strong> Mostra cada imagem processada com sua respectiva tabela
+                            de detecções.</li>
+                    </ul>
+                </div>
+            </section>
 
-        <h2>Interface do Usuário (`index.html`)</h2>
-        <p>O frontend permite o controle dinâmico dos parâmetros de detecção e exibe o relatório final de forma
-            responsiva.</p>
+            <!-- Seção Execução e Deploy -->
+            <section id="execucao" class="content-section">
+                <h2 class="text-3xl font-bold text-blue-900 mb-6">Execução e Deploy</h2>
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h3 class="font-semibold text-lg mb-2">1. Instalação de Dependências</h3>
+                    <pre class="bg-slate-100 p-4 rounded-md">pip install -r requirements.txt</pre>
+                    <h3 class="font-semibold text-lg mt-6 mb-2">2. Execução do Servidor (com Proxy Reverso)</h3>
+                    <pre
+                        class="bg-slate-100 p-4 rounded-md">uvicorn main:app --reload --host 127.0.0.1 --port 8000 --root-path /detector</pre>
+                    <p class="mt-2">Com um proxy reverso configurado para <code>/detector/</code>, acesse a aplicação em
+                        <a href="http://localhost/detector/"
+                            class="text-blue-600 hover:underline">http://localhost/detector/</a>.
+                    </p>
+                </div>
+            </section>
 
-        <h3>Parâmetros Dinâmicos</h3>
-        <ul>
-            <li>**Confiança Buraco:** Controla o score mínimo para aceitar detecções de buraco.</li>
-            <li>**Confiança Bueiro:** Controla o score mínimo para aceitar detecções de bueiro.</li>
-            <li>**Modo de Detecção:** Escolhe entre o modelo `box` ou `mask`.</li>
-        </ul>
-
-        <h2>Requisitos de Dependências</h2>
-        <pre>
-fastapi
-uvicorn
-jinja2
-python-multipart
-ultralytics
-opencv-python
-numpy
+            <!-- Seção Customização -->
+            <section id="customizacao" class="content-section">
+                <h2 class="text-3xl font-bold text-blue-900 mb-6">Customização</h2>
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h3 class="font-semibold text-lg mb-2">Trocando os Modelos de IA</h3>
+                    <p>Para usar seus próprios modelos, simplesmente substitua os arquivos <code>.pt</code> na pasta
+                        <code>/models</code> e ajuste os nomes no início do arquivo <code>main.py</code>:
+                    </p>
+                    <pre class="bg-slate-100 p-4 rounded-md text-sm">
+# Em main.py
+try: models["box"] = YOLO("models/seu_modelo_box.pt")
+except: ...
 </pre>
-
-        <h2>Execução do Servidor Uvicorn</h2>
-        <pre>
-uvicorn main:app --host 0.0.0.0 --port 8000
+                    <h3 class="font-semibold text-lg mt-6 mb-2">Ajustando Parâmetros Físicos</h3>
+                    <p>As constantes para cálculo de área e massa de CBUQ podem ser alteradas no <code>main.py</code>
+                        para refletir diferentes realidades de engenharia.</p>
+                    <pre class="bg-slate-100 p-4 rounded-md text-sm">
+# Em main.py
+PIXEL_TO_CM2 = 0.04       # Ajuste conforme a calibração da câmera
+DENSIDADE_CBUQ_TM3 = 2.4
+ESPESSURA_CM = 5
 </pre>
-        <p>Acessível em <code>http://127.0.0.1:8000/</code> para a interface web ou
-            <code>http://127.0.0.1:8000/docs</code> para a documentação interativa da API.</p>
+                </div>
+            </section>
 
-        <h2>Configuração de Proxy Reverso (Nginx)</h2>
-        <p>Para produção, use o Nginx para servir a aplicação sob o subdiretório <code>/detector/</code>.</p>
-        <pre>
-location /detector/ {
-    proxy_pass http://127.0.0.1:8000/;  # A barra no final é importante
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "upgrade";
-}
-</pre>
-
+        </main>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('.content-section');
+
+            function updateActiveState() {
+                let currentHash = window.location.hash || '#introducao';
+
+                navLinks.forEach(link => {
+                    if (link.getAttribute('href') === currentHash) {
+                        link.classList.add('active');
+                    } else {
+                        link.classList.remove('active');
+                    }
+                });
+
+                sections.forEach(section => {
+                    if ('#' + section.id === currentHash) {
+                        section.classList.add('active');
+                    } else {
+                        section.classList.remove('active');
+                    }
+                });
+            }
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    // e.preventDefault(); // Comentado para permitir a navegação por hash
+                    setTimeout(updateActiveState, 0);
+                });
+            });
+
+            window.addEventListener('hashchange', updateActiveState);
+            updateActiveState(); // Initial load
+        });
+    </script>
+
 </body>
 
 </html>
