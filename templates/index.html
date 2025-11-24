@@ -4,29 +4,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ConservApp - Detecção Inteligente</title>
+    <title>ConservApp - Detecção Combinada</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         .result-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 1.5rem;
         }
 
         .result-card {
-            background-color: white;
+            background: white;
             border-radius: 0.5rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             overflow: hidden;
-            transition: transform 0.2s;
         }
 
-        .result-card:hover {
-            transform: translateY(-2px);
-        }
-
-        /* Animação suave para o relatório aparecer */
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -47,568 +41,267 @@
 
 <body class="bg-slate-100 min-h-screen font-sans">
 
-    <nav class="bg-blue-900 text-white shadow-lg">
-        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+    <nav class="bg-blue-900 text-white shadow-lg p-4">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-2">
                 <i class="fa-solid fa-road text-yellow-400 text-2xl"></i>
-                <span class="text-xl font-bold tracking-wide">ConservApp AI</span>
+                <span class="text-xl font-bold">ConservApp AI</span>
             </div>
-            <div class="text-sm opacity-80">22ª Gerência de Conservação</div>
+            <div class="text-sm opacity-80">Modo Combinado</div>
         </div>
     </nav>
 
-    <main class="max-w-6xl mx-auto mt-10 p-4">
+    <main class="max-w-6xl mx-auto mt-8 p-4">
 
-        <div class="text-center mb-10">
-            <h1 class="text-3xl font-bold text-slate-800">Detecção de Falhas no Pavimento</h1>
-            <p class="text-slate-500 mt-2">Envie uma foto para análise automática via IA</p>
-        </div>
-
-        <div class="bg-white p-4 rounded-xl shadow-md mb-8">
-            <h3 class="text-lg font-semibold text-slate-700 mb-3">Configurações de Análise</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="flex items-center space-x-4">
-                    <label for="confidence-slider" class="text-sm font-medium text-slate-600 whitespace-nowrap">Nível de
-                        Confiabilidade:</label>
-                    <input type="range" id="confidence-slider" min="0.1" max="0.9" step="0.01"
-                        class="w-full cursor-pointer">
-                    <span id="confidence-value"
-                        class="font-bold text-blue-700 w-16 text-center bg-slate-100 rounded-md py-1">0.22</span>
+        <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+            <h3 class="text-lg font-semibold text-slate-700 mb-4 border-b pb-2">Configurações de Detecção</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Confiança Buraco:</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="range" id="conf-buraco" min="0.1" max="0.9" step="0.01" value="0.25"
+                            class="w-full">
+                        <span id="val-buraco" class="font-bold text-blue-700 bg-slate-100 px-2 rounded">0.22</span>
+                    </div>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <label for="detection-mode-select" class="text-sm font-medium text-slate-600 whitespace-nowrap">Modo
-                        de Detecção:</label>
-                    <select id="detection-mode-select"
-                        class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2">
-                        <option value="box" selected>Retângulo (Rápido)</option>
-                        <option value="mask">Máscara de Segmentação (Preciso)</option>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Confiança Bueiro:</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="range" id="conf-bueiro" min="0.1" max="0.9" step="0.01" value="0.3" class="w-full">
+                        <span id="val-bueiro" class="font-bold text-blue-700 bg-slate-100 px-2 rounded">0.30</span>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Modo Visual:</label>
+                    <select id="mode-select" class="w-full border p-2 rounded">
+                        <option value="box">Caixa (Rápido)</option>
+                        <option value="mask">Máscara (Preciso)</option>
                     </select>
                 </div>
             </div>
         </div>
 
-        <div id="upload-area">
-            <div class="bg-white rounded-xl shadow-md p-8 text-center transition-all duration-300 border-2 border-dashed border-slate-300 hover:border-blue-500"
-                id="drop-zone">
-
-                <input type="file" id="file-input-camera" class="hidden" accept="image/*" capture="environment">
-                <input type="file" id="file-input-gallery" class="hidden" accept="image/*" multiple>
-
-                <div id="upload-content">
-                    <div
-                        class="mb-4 text-blue-100 bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto">
-                        <i class="fa-solid fa-cloud-arrow-up text-2xl text-white"></i>
-                    </div>
-                    <h3 class="text-lg font-medium text-slate-700">Arraste ou clique para selecionar fotos</h3>
-                    <p class="text-sm text-slate-400 mt-4">Suporta JPG, PNG. Pode selecionar **múltiplas fotos**.</p>
-
-                    <div class="mt-6 flex justify-center space-x-4">
-                        <button id="btn-camera"
-                            class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition flex items-center shadow-lg">
-                            <i class="fa-solid fa-camera mr-2"></i> Capturar Foto
-                        </button>
-                        <button id="btn-gallery"
-                            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition flex items-center shadow-lg">
-                            <i class="fa-solid fa-folder-open mr-2"></i> Enviar da Galeria
-                        </button>
-                    </div>
-                </div>
-
-                <div id="loading" class="hidden">
-                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p class="mt-4 text-blue-600 font-semibold" id="loading-message">Iniciando análise do lote...</p>
-                </div>
+        <div id="upload-area"
+            class="bg-white rounded-xl shadow-md p-8 text-center border-2 border-dashed border-slate-300 hover:border-blue-500 transition">
+            <input type="file" id="file-input" class="hidden" accept="image/*" multiple>
+            <div id="upload-ui">
+                <i class="fa-solid fa-cloud-arrow-up text-4xl text-blue-500 mb-4"></i>
+                <h3 class="text-xl font-medium text-slate-700">Selecione suas fotos</h3>
+                <p class="text-sm text-slate-400 mb-6">Detecta Buracos e Bueiros simultaneamente</p>
+                <button onclick="document.getElementById('file-input').click()"
+                    class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 shadow-lg">
+                    <i class="fa-solid fa-camera mr-2"></i> Abrir Câmera / Galeria
+                </button>
+            </div>
+            <div id="loading" class="hidden mt-4">
+                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto"></div>
+                <p class="mt-2 text-blue-600">Processando Inteligência Artificial...</p>
             </div>
         </div>
 
         <div id="report-area" class="mt-8 hidden animate-fade-in">
-            <div class="bg-white rounded-xl shadow-lg overflow-hidden p-6 mb-4">
-                <div class="flex justify-between items-center mb-4">
-                    <span class="text-xl font-bold text-slate-800">Concluído!</span>
-                    <span id="batch-progress" class="text-lg font-semibold text-green-600">100%</span>
+            <div
+                class="bg-blue-900 text-white p-4 rounded-xl shadow-lg flex flex-wrap justify-between items-center mb-6 gap-4">
+                <div>
+                    <p class="text-xs uppercase opacity-70">Total CBUQ (Estimado)</p>
+                    <p class="text-2xl font-bold text-yellow-400" id="total-ton">0.000 t</p>
                 </div>
-                <div class="h-2 bg-green-500 rounded-full w-full mb-6"></div>
-                <div id="results-grid" class="result-grid">
+                <div>
+                    <p class="text-xs uppercase opacity-70">Área Danificada</p>
+                    <p class="text-xl font-bold" id="total-m2">0.00 m²</p>
+                </div>
+                <div>
+                    <p class="text-xs uppercase opacity-70">Ocorrências</p>
+                    <p class="text-xl font-bold" id="total-count">0</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="printReport()"
+                        class="bg-white text-blue-900 px-4 py-2 rounded font-bold hover:bg-gray-100">
+                        <i class="fa-solid fa-print"></i>
+                    </button>
+                    <button onclick="resetApp()"
+                        class="bg-red-600 text-white px-4 py-2 rounded font-bold hover:bg-red-700">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
                 </div>
             </div>
 
-            <div
-                class="bg-blue-900 text-white p-4 flex flex-col md:flex-row justify-between items-center rounded-xl shadow-lg gap-4">
-                <div class="text-lg font-bold">
-                    TOTAL DA VISTORIA
-                </div>
-                <div class="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-6">
-                    <span id="grand-total-cbuq" class="text-xl font-extrabold text-yellow-400">
-                        0.000 TON
-                    </span>
-                    <span id="grand-total-dano" class="text-lg font-semibold">
-                        0.00 m² (acabamento)
-                    </span>
-                    <span class="text-lg font-semibold">
-                        Total Detecções: <span id="grand-total-count" class="text-yellow-400">0</span>
-                    </span>
-                    <div class="flex space-x-2">
-                        <button id="print-button"
-                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition flex items-center shadow-lg">
-                            <i class="fa-solid fa-print mr-2"></i> Imprimir
-                        </button>
-                        <button id="reset-button"
-                            class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition flex items-center shadow-lg">
-                            <i class="fa-solid fa-arrow-rotate-left mr-2"></i> Resetar
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <div id="results-grid" class="result-grid"></div>
         </div>
 
     </main>
 
-    <div id="image-modal" class="fixed inset-0 bg-black bg-opacity-80 hidden items-center justify-center z-50 p-4"
-        onclick="closeModal()">
-        <div class="relative" onclick="event.stopPropagation()">
-            <img id="modal-image" src="" alt="Imagem Ampliada"
-                class="max-w-full max-h-[90vh] object-contain rounded-lg">
-            <button id="modal-close"
-                class="absolute -top-2 -right-2 text-white bg-red-600 hover:bg-red-700 rounded-full w-8 h-8 flex items-center justify-center text-2xl font-bold leading-none shadow-lg"
-                onclick="closeModal()">
-                &times;
-            </button>
-        </div>
+    <div id="modal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-50 p-4"
+        onclick="this.classList.add('hidden')">
+        <img id="modal-img" class="max-h-screen max-w-full rounded shadow-2xl">
     </div>
 
     <script>
-        const fileInputCamera = document.getElementById('file-input-camera');
-        const fileInputGallery = document.getElementById('file-input-gallery');
-        const btnCamera = document.getElementById('btn-camera');
-        const btnGallery = document.getElementById('btn-gallery');
+        const confBuraco = document.getElementById('conf-buraco');
+        const confBueiro = document.getElementById('conf-bueiro');
+        const fileInput = document.getElementById('file-input');
+        let currentFiles = [];
+        let lastData = null;
 
-        const uploadContent = document.getElementById('upload-content');
-        const loading = document.getElementById('loading');
-        const loadingMessage = document.getElementById('loading-message');
-        const reportArea = document.getElementById('report-area');
-        const resultsGrid = document.getElementById('results-grid');
+        // Atualiza labels dos sliders
+        confBuraco.oninput = () => document.getElementById('val-buraco').textContent = confBuraco.value;
+        confBueiro.oninput = () => document.getElementById('val-bueiro').textContent = confBueiro.value;
 
-        // Rodapé de Totais
-        const grandTotalCbuq = document.getElementById('grand-total-cbuq');
-        const grandTotalDano = document.getElementById('grand-total-dano');
-        const grandTotalCount = document.getElementById('grand-total-count');
-
-        // Elementos do Modal
-        const imageModal = document.getElementById('image-modal');
-        const modalImage = document.getElementById('modal-image');
-
-        // Elementos de Configuração
-        const confidenceSlider = document.getElementById('confidence-slider');
-        const confidenceValueDisplay = document.getElementById('confidence-value');
-        const detectionModeSelect = document.getElementById('detection-mode-select');
-
-        let originalFiles = [];
-        let lastReportData = null;
-
-        // Dispara os inputs
-        btnCamera.addEventListener('click', (e) => {
-            e.stopPropagation();
-            fileInputCamera.click();
+        // Se mudar slider, reprocessa se já tiver foto
+        [confBuraco, confBueiro, document.getElementById('mode-select')].forEach(el => {
+            el.onchange = () => { if (currentFiles.length) processFiles(currentFiles); };
         });
 
-        btnGallery.addEventListener('click', (e) => {
-            e.stopPropagation();
-            fileInputGallery.click();
-        });
+        fileInput.onchange = (e) => { if (e.target.files.length) processFiles(e.target.files); };
 
-        // --- LÓGICA DE CONFIGURAÇÃO ---
-        const savedConfidence = localStorage.getItem('potholeConfidence') || '0.22';
-        confidenceSlider.value = savedConfidence;
-        confidenceValueDisplay.textContent = parseFloat(savedConfidence).toFixed(2);
+        async function processFiles(files) {
+            currentFiles = files;
+            document.getElementById('upload-ui').classList.add('hidden');
+            document.getElementById('report-area').classList.add('hidden');
+            document.getElementById('loading').classList.remove('hidden');
 
-        confidenceSlider.addEventListener('input', () => {
-            const value = parseFloat(confidenceSlider.value).toFixed(2);
-            confidenceValueDisplay.textContent = value;
-        });
-        confidenceSlider.addEventListener('change', () => {
-            localStorage.setItem('potholeConfidence', confidenceSlider.value);
-            reprocessImages();
-        });
-
-        detectionModeSelect.value = localStorage.getItem('potholeDetectionMode') || 'box';
-        detectionModeSelect.addEventListener('change', () => {
-            localStorage.setItem('potholeDetectionMode', detectionModeSelect.value);
-            reprocessImages();
-        });
-
-        // --- LÓGICA DE IMPRESSÃO E RESET ---
-        document.getElementById('print-button').addEventListener('click', printReport);
-        document.getElementById('reset-button').addEventListener('click', () => {
-            reset();
-        });
-
-        fileInputCamera.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) processBatch(e.target.files);
-        });
-
-        fileInputGallery.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) processBatch(e.target.files);
-        });
-
-        async function processBatch(files) {
-            originalFiles = Array.from(files);
-            const fileArray = originalFiles;
-
-            uploadContent.classList.add('hidden');
-            reportArea.classList.add('hidden');
-            loading.classList.remove('hidden');
-            resultsGrid.innerHTML = '';
-            loadingMessage.textContent = `Preparando o envio de ${fileArray.length} fotos...`;
-
-            const confidence = confidenceSlider.value;
-            const detectionMode = detectionModeSelect.value;
-
-            const formData = new FormData();
-            formData.append('confidence', confidence);
-            formData.append('detection_mode', detectionMode);
-
-            fileArray.forEach(file => formData.append('files', file));
+            const fd = new FormData();
+            fd.append('confidence_buraco', confBuraco.value);
+            fd.append('confidence_bueiro', confBueiro.value);
+            fd.append('detection_mode', document.getElementById('mode-select').value);
+            for (let f of files) fd.append('files', f);
 
             try {
-                // Endpoint ajustado para o proxy
-                const apiUrl = '/detector/detectar';
+                // --- CORREÇÃO DO PROXY ---
+                // Adicionado /detector no início da URL
+                const req = await fetch('/detector/detectar', { method: 'POST', body: fd });
 
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    renderBatchResults(result);
+                if (req.ok) {
+                    const res = await req.json();
+                    renderResults(res);
                 } else {
-                    const errorDetails = await response.json().catch(() => ({ message: 'Erro desconhecido.' }));
-                    alert(`Erro na análise do lote. Código HTTP: ${response.status}. Detalhe: ${errorDetails.message}`);
+                    const err = await req.json().catch(() => ({}));
+                    alert('Erro no servidor: ' + (err.message || req.statusText));
+                    resetApp();
                 }
-            } catch (error) {
-                console.error('Erro de conexão ou processamento:', error);
-                alert('Erro de conexão com o servidor ou de processamento fatal.');
-            } finally {
-                loading.classList.add('hidden');
+            } catch (e) {
+                console.error(e);
+                alert('Erro de conexão ou endpoint não encontrado (/detector/detectar).');
+                resetApp();
             }
         }
 
-        function enlargeImage(imageId) {
-            const imageElement = document.getElementById(imageId);
-            if (imageElement && imageElement.src) {
-                modalImage.src = imageElement.src;
-                imageModal.classList.remove('hidden');
-                imageModal.classList.add('flex');
-            }
-        }
+        function renderResults(data) {
+            lastData = data;
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('report-area').classList.remove('hidden');
 
-        function reprocessImages() {
-            if (originalFiles.length > 0 && !reportArea.classList.contains('hidden')) {
-                processBatch(originalFiles);
-            }
-        }
+            // Atualiza Totais
+            document.getElementById('total-ton').textContent = data.grand_totals.ton + ' t';
+            document.getElementById('total-m2').textContent = data.grand_totals.m2 + ' m²';
+            document.getElementById('total-count').textContent = data.grand_totals.count;
 
-        function closeModal() {
-            imageModal.classList.add('hidden');
-            imageModal.classList.remove('flex');
-        }
+            const grid = document.getElementById('results-grid');
+            grid.innerHTML = '';
 
-        function renderBatchResults(data) {
-            lastReportData = data;
-            resultsGrid.innerHTML = '';
+            data.batch_results.forEach((item, idx) => {
+                // Monta linhas da tabela interna do card
+                let rows = item.report_data.map(d => `
+                    <tr class="border-b text-sm">
+                        <td class="p-1 font-bold text-gray-600">${d.id}</td>
+                        <td class="p-1">${d.tipo}</td>
+                        <td class="p-1 font-mono text-blue-700 font-bold">${d.detalhe}</td>
+                        <td class="p-1 text-right text-xs text-gray-400">${d.extra !== '-' ? d.extra : d.conf}</td>
+                    </tr>
+                `).join('');
 
-            data.batch_results.forEach((item, index) => {
-                if (item.error) {
-                    const errorCard = createErrorCard(item);
-                    resultsGrid.insertAdjacentHTML('beforeend', errorCard);
-                    return;
-                }
+                if (!rows) rows = '<tr><td colspan="4" class="p-4 text-center text-gray-400 text-xs">Nada detectado</td></tr>';
 
-                const areaM2 = parseFloat(item.total_dano_m2_file).toFixed(4);
-                const massaT = parseFloat(item.total_cbuq_t_file).toFixed(3);
-                const filename = item.file_name.length > 20 ? item.file_name.substring(0, 17) + '...' : item.file_name;
-                const totalBuracos = item.count;
-
-                const cardHTML = `
+                grid.innerHTML += `
                     <div class="result-card">
-                        <div class="p-2 bg-slate-200">
-                            <span class="text-xs font-semibold text-slate-600">${filename}</span>
-                        </div>
-                        <div class="relative flex justify-center items-center h-48 bg-slate-300">
-                            <img src="data:image/jpeg;base64,${item.image_b64}" alt="${item.file_name}" class="object-cover w-full h-full" id="image-${index}">
-                            <div class="absolute top-2 right-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full font-bold">
-                                ${totalBuracos} ${totalBuracos === 1 ? 'Buraco' : 'Buracos'}
+                        <div class="p-2 bg-gray-50 border-b text-xs font-bold text-gray-500 truncate">${item.file_name}</div>
+                        <div class="relative h-48 bg-gray-200 cursor-pointer group" onclick="showModal('data:image/jpeg;base64,${item.image_b64}')">
+                            <img src="data:image/jpeg;base64,${item.image_b64}" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition flex items-center justify-center">
+                                <span class="bg-black/50 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100">Ampliar</span>
                             </div>
                         </div>
-                        <div class="p-4">
-                            <div class="flex justify-between font-bold text-sm mb-2">
-                                <span class="text-slate-700">ID: #${index + 1}</span>
-                                <span class="text-green-600">Confiança: ${totalBuracos > 0 ? item.report_data[0].confidence : 'N/A'}</span>
-                            </div>
-                            <div class="grid grid-cols-2 text-center border-t border-slate-200 pt-3">
-                                <div>
-                                    <p class="text-xs text-slate-500 uppercase">ACAB.(m²)</p>
-                                    <p class="font-extrabold text-lg">${areaM2}</p>
-                                </div>
-                                <div>
-                                    <p class="text-xs text-slate-500 uppercase">MASSA (t)</p>
-                                    <p class="font-extrabold text-lg text-blue-700">${massaT}</p>
-                                </div>
-                            </div>
-                            <button onclick="enlargeImage('image-${index}')" class="w-full mt-3 bg-blue-100 text-blue-700 text-xs py-1 rounded hover:bg-blue-200">
-                                Clique para ampliar
-                            </button>
+                        <div class="p-3">
+                            <table class="w-full text-left">
+                                <thead class="text-xs text-gray-400 uppercase"><tr><th>#</th><th>Tipo</th><th>Info</th><th class="text-right">Extra</th></tr></thead>
+                                <tbody>${rows}</tbody>
+                            </table>
                         </div>
                     </div>
                 `;
-                resultsGrid.insertAdjacentHTML('beforeend', cardHTML);
+            });
+        }
+
+        function showModal(src) {
+            document.getElementById('modal-img').src = src;
+            document.getElementById('modal').classList.remove('hidden');
+            document.getElementById('modal').classList.add('flex');
+        }
+
+        function resetApp() {
+            currentFiles = [];
+            document.getElementById('report-area').classList.add('hidden');
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('upload-ui').classList.remove('hidden');
+            fileInput.value = '';
+        }
+
+        function printReport() {
+            if (!lastData) return;
+            const w = window.open('', '_blank');
+            const d = new Date().toLocaleString('pt-BR');
+
+            // HTML Gerado para Impressão
+            let html = `
+                <html><head><title>Relatório</title>
+                <style>
+                    body { font-family: sans-serif; padding: 20px; }
+                    .header { border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; }
+                    .card { border: 1px solid #ddd; margin-bottom: 20px; page-break-inside: avoid; display: flex; }
+                    .img-box { width: 40%; }
+                    .img-box img { width: 100%; height: auto; display: block; }
+                    .info-box { width: 60%; padding: 10px; }
+                    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+                    th, td { border-bottom: 1px solid #eee; padding: 4px; text-align: left; }
+                    th { background: #f9f9f9; }
+                    .totals { background: #eef2ff; padding: 10px; border: 1px solid #c7d2fe; margin-bottom: 20px; font-weight: bold; font-size: 14px; }
+                </style>
+                </head><body>
+                <div class="header">
+                    <h1>Relatório de Vistoria</h1>
+                    <span>${d}</span>
+                </div>
+                <div class="totals">
+                    TOTAL GERAL: ${lastData.grand_totals.count} Ocorrências | 
+                    Área: ${lastData.grand_totals.m2} m² | 
+                    Massa CBUQ: ${lastData.grand_totals.ton} t
+                </div>
+            `;
+
+            lastData.batch_results.forEach(item => {
+                let trs = item.report_data.map(x => `
+                    <tr><td>${x.tipo}</td><td>${x.detalhe}</td><td>${x.extra}</td></tr>
+                `).join('');
+
+                html += `
+                    <div class="card">
+                        <div class="img-box"><img src="data:image/jpeg;base64,${item.image_b64}"></div>
+                        <div class="info-box">
+                            <strong>${item.file_name}</strong>
+                            <br><br>
+                            <table>
+                                <tr><th>Tipo</th><th>Detalhe</th><th>Extra</th></tr>
+                                ${trs || '<tr><td colspan="3">Nada detectado</td></tr>'}
+                            </table>
+                        </div>
+                    </div>
+                `;
             });
 
-            grandTotalCbuq.textContent = `${data.grand_totals.total_cbuq_t} TON`;
-            grandTotalDano.textContent = `${data.grand_totals.total_dano_m2} m² (acabamento)`;
-            grandTotalCount.textContent = data.grand_totals.total_count;
-
-            reportArea.classList.remove('hidden');
-        }
-
-        // --- FUNÇÃO DE IMPRESSÃO ATUALIZADA (SEM COLUNA CONF) ---
-        function printReport() {
-            if (!lastReportData) {
-                alert("Nenhum relatório para imprimir. Por favor, processe as imagens primeiro.");
-                return;
-            }
-
-            const printWindow = window.open('', '_blank');
-            const reportDate = new Date().toLocaleString('pt-BR');
-
-            // Gera o HTML do Resumo (Cabeçalho)
-            const summaryHTML = `
-                <div class="grand-totals">
-                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #ccc; padding-bottom:5px; margin-bottom:10px;">
-                         <h1 style="margin:0; font-size:18px; color:#1e3a8a;">Relatório de Vistoria - ConservApp AI</h1>
-                         <span style="font-size:10px;">Emissão: ${reportDate}</span>
-                    </div>
-                    <div style="background-color:#f0f9ff; padding:8px; border-radius:4px; font-size:12px; border:1px solid #bae6fd;">
-                         <span style="margin-right:15px;"><strong>CBUQ:</strong> ${lastReportData.grand_totals.total_cbuq_t} TON</span>
-                         <span style="margin-right:15px;"><strong>Área:</strong> ${lastReportData.grand_totals.total_dano_m2} m²</span>
-                         <span><strong>Total Detecções:</strong> ${lastReportData.grand_totals.total_count}</span>
-                    </div>
-                </div>
-            `;
-
-            let reportHTML = `
-                <html>
-                <head>
-                    <title>Relatório de Vistoria - ConservApp AI</title>
-                    <style>
-                        body { 
-                            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-                            line-height: 1.2; 
-                            color: #333; 
-                            margin: 0; padding: 0;
-                            background-color: white;
-                        }
-                        .report-container { width: 100%; max-width: 210mm; margin: 0 auto; padding: 10px; box-sizing: border-box; }
-                        
-                        /* Layout de Página para Impressão */
-                        .page { 
-                            page-break-after: always; 
-                            page-break-inside: avoid;
-                            display: flex;
-                            flex-direction: column;
-                            min-height: 50vh; 
-                            padding-top: 10px;
-                        }
-                        .page:last-child { page-break-after: auto; }
-
-                        .grand-totals { margin-bottom: 15px; }
-
-                        /* Grid de Fotos */
-                        .photo-grid {
-                            display: flex;
-                            flex-wrap: wrap;
-                            gap: 15px; /* Espaço entre os cartões */
-                            justify-content: flex-start; 
-                        }
-
-                        /* O container 'image-section' é o pai da foto e da tabela */
-                        .image-section { 
-                            page-break-inside: avoid;
-                            border: 1px solid #ccc; 
-                            border-radius: 6px; 
-                            overflow: hidden; /* Garante que filhos respeitem a borda arredondada */
-                            box-sizing: border-box;
-                            background: #fff;
-                            display: flex;
-                            flex-direction: column;
-                        }
-
-                        h3 { 
-                            font-size: 11px; 
-                            margin: 0; 
-                            padding: 5px 8px;
-                            background-color: #f3f4f6;
-                            border-bottom: 1px solid #ddd;
-                            color: #333; 
-                            white-space: nowrap; 
-                            overflow: hidden; 
-                            text-overflow: ellipsis; 
-                        }
-
-                        /* Imagem: Bloco sólido, 100% largura */
-                        img { 
-                            width: 100%; 
-                            height: auto; 
-                            display: block; /* Remove o espaço branco embaixo da imagem */
-                            object-fit: cover;
-                            border-bottom: 1px solid #ddd; /* Linha separando foto da tabela */
-                        }
-
-                        /* Tabela: 100% largura */
-                        table { 
-                            width: 100%; 
-                            border-collapse: collapse; 
-                            font-size: 9px; 
-                            margin: 0; 
-                            table-layout: fixed; /* Mantém colunas estáveis */
-                        }
-                        
-                        th, td { 
-                            padding: 4px; 
-                            text-align: center; 
-                            /* Apenas bordas internas verticais */
-                            border-right: 1px solid #eee;
-                        }
-                        th:last-child, td:last-child { border-right: none; }
-                        
-                        th { background-color: #f9fafb; font-weight: bold; border-bottom: 1px solid #eee; }
-
-                        /* --- REGRAS DE LAYOUT (Responsividade na Impressão) --- */
-
-                        /* LAYOUT 1: 1 Foto Gigante */
-                        .photo-grid.layout-1 .image-section { width: 100%; }
-                        .photo-grid.layout-1 img { max-height: 500px; }
-
-                        /* LAYOUT 2: 2 Fotos */
-                        .photo-grid.layout-2 .image-section { width: 48%; flex-grow: 1; }
-                        .photo-grid.layout-2 img { max-height: 350px; } 
-
-                        /* LAYOUT 3: 1 Grande em cima, 2 menores embaixo */
-                        .photo-grid.layout-3 .image-section:nth-child(1) { width: 100%; }
-                        .photo-grid.layout-3 .image-section:nth-child(n+2) { width: 48%; }
-                        
-                        .photo-grid.layout-3 .image-section:nth-child(1) img { max-height: 300px; object-fit: contain; background: #eee; }
-                        .photo-grid.layout-3 .image-section:nth-child(n+2) img { max-height: 200px; }
-
-                        /* LAYOUT 4 ou mais: Grid 2 colunas padrão */
-                        .photo-grid.layout-4 .image-section { width: 48%; }
-                        /* Altura controlada para caber mais na página */
-                        .photo-grid.layout-4 img { max-height: 220px; }
-
-                        @media print {
-                            body { -webkit-print-color-adjust: exact; margin: 0; }
-                            .report-container { padding: 0; }
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="report-container">
-            `;
-
-            const items = lastReportData.batch_results.filter(item => !item.error);
-            const chunkSize = 4;
-            let isFirstPage = true;
-
-            for (let i = 0; i < items.length; i += chunkSize) {
-                const chunk = items.slice(i, i + chunkSize);
-
-                // Abre nova página
-                reportHTML += `<div class="page">`;
-
-                // SE FOR A PRIMEIRA PÁGINA, INSERE O RESUMO AQUI DENTRO
-                if (isFirstPage) {
-                    reportHTML += summaryHTML;
-                    isFirstPage = false;
-                }
-
-                // Grid de fotos
-                let layoutClass = 'layout-4'; // padrão
-                if (chunk.length === 1) layoutClass = 'layout-1';
-                else if (chunk.length === 2) layoutClass = 'layout-2';
-                else if (chunk.length === 3) layoutClass = 'layout-3';
-
-                reportHTML += `<div class="photo-grid ${layoutClass}">`;
-
-                chunk.forEach(item => {
-                    reportHTML += `
-                        <div class="image-section">
-                            <h3>${item.file_name}</h3>
-                            <img src="data:image/jpeg;base64,${item.image_b64}" alt="${item.file_name}">
-                    `;
-
-                    if (item.report_data.length > 0) {
-                        reportHTML += `
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Área</th>
-                                        <th>Massa</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                        `;
-                        item.report_data.forEach(det => {
-                            reportHTML += `
-                                <tr>
-                                    <td>${det.id}</td>
-                                    <td>${det.dano_m2}</td>
-                                    <td>${det.cbuq_t}</td>
-                                </tr>
-                            `;
-                        });
-                        reportHTML += `</tbody></table>`;
-                    } else {
-                        reportHTML += `<div style="padding:10px; text-align:center; color:#888; font-size:10px;">Nenhum defeito detectado nesta imagem.</div>`;
-                    }
-                    reportHTML += `</div>`; // Fecha .image-section
-                });
-
-                reportHTML += `</div>`; // Fecha .photo-grid
-                reportHTML += `</div>`; // Fecha .page
-            }
-
-
-            reportHTML += `</div></body></html>`;
-            printWindow.document.write(reportHTML);
-            printWindow.document.close();
-            printWindow.focus();
-            setTimeout(() => { printWindow.print(); }, 800);
-        }
-
-        function createErrorCard(item) {
-            return `
-                <div class="result-card bg-red-100 border border-red-500">
-                    <div class="p-4">
-                        <p class="font-bold text-red-700">${item.file_name}</p>
-                        <p class="text-sm text-red-600 mt-2">Erro: Processamento falhou.</p>
-                    </div>
-                </div>
-            `;
-        }
-
-        function reset() {
-            reportArea.classList.add('hidden');
-            loading.classList.add('hidden');
-            uploadContent.classList.remove('hidden');
-            fileInputCamera.value = '';
-            fileInputGallery.value = '';
-            resultsGrid.innerHTML = '';
-            grandTotalCbuq.textContent = '0.000 TON';
-            grandTotalDano.textContent = '0.00 m² (acabamento)';
-            grandTotalCount.textContent = '0';
-            originalFiles = [];
-            lastReportData = null;
+            html += '</body></html>';
+            w.document.write(html);
+            w.document.close();
+            setTimeout(() => w.print(), 500);
         }
     </script>
 </body>
