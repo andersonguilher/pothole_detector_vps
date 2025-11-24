@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 import logging
 import base64
+from PIL import Image, ImageDraw, ImageFont
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -29,24 +30,30 @@ except: print("❌ bueiros_det.pt não encontrado.")
 print("-" * 30)
 
 # --- CONFIGURAÇÕES GERAIS ---
-# Resolução de entrada da IA (Padrão YOLO é 640. 1280 melhora objetos pequenos/distantes)
 RESOLUCAO_IA = 736
 
-TRADUCAO_BUEIRO = {'good': 'Bom', 'broke': 'Quebrado', 'uncover': 'Aberto'}
+# TRADUÇÃO
+TRADUCAO_BUEIRO = {
+    'good': 'TAMPÃO (BOM)', 
+    'broke': 'TAMPÃO (QUEBRADO)', 
+    'uncover': 'BUEIRO (ABERTO)',
+    'missing': 'BUEIRO (SEM TAMPA)'
+}
+
+# CORES
 CORES_BUEIRO = {
-    'Bom': (0, 255, 0),      # Verde
-    'Quebrado': (0, 0, 255), # Vermelho
-    'Aberto': (0, 0, 255),   # Vermelho
-    'Sem Tampa': (0, 0, 255) # Vermelho
+    'TAMPÃO (BOM)': (0, 255, 0),      # Verde
+    'TAMPÃO (QUEBRADO)': (0, 0, 255), # Vermelho
+    'BUEIRO (ABERTO)': (0, 0, 255),   # Vermelho
+    'BUEIRO (SEM TAMPA)': (0, 0, 255) # Vermelho
 }
 COR_BURACO = (0, 255, 255)   # Amarelo/Ciano
 
 templates = Jinja2Templates(directory="templates")
 
 # Configuração Visual
-FONT_SCALE = 1.2
-THICKNESS = 3
-PADDING = 10
+THICKNESS = 2
+PADDING = 4
 
 # Física
 PIXEL_TO_CM2 = 0.04 
@@ -68,21 +75,79 @@ def get_iou(boxA, boxB):
     boxBArea = (boxB[2] - boxB[0]) * (boxB[3] - boxB[1])
     return interArea / float(boxAArea + boxBArea - interArea)
 
-def desenhar_etiqueta(img, texto, x, y, cor_fundo, cor_texto=(0,0,0), posicao='topo'):
-    (w_txt, h_txt), _ = cv2.getTextSize(texto, cv2.FONT_HERSHEY_SIMPLEX, FONT_SCALE, THICKNESS)
-    h_img, _, _ = img.shape
-    
-    if posicao == 'topo':
-        y_bg_top = max(0, y - h_txt - 20)
-        y_bg_bottom = max(h_txt + 20, y)
-        y_txt = max(h_txt + 12, y - 8)
-    else:
-        y_bg_top = min(h_img - h_txt - 20, y)
-        y_bg_bottom = min(h_img, y + h_txt + 20)
-        y_txt = min(h_img - 8, y + h_txt + 12)
+# NOVA FUNÇÃO DE FUSÃO ROBUSTA
+def fundir_bueiros_recursivo(lista_bueiros):
+    # Loop infinito que só para quando não houver mais nada para fundir
+    while True:
+        houve_fusao = False
+        nova_lista = []
+        indices_processados = set()
 
-    cv2.rectangle(img, (x, y_bg_top), (x + w_txt + PADDING, y_bg_bottom), cor_fundo, -1)
-    cv2.putText(img, texto, (x + 5, y_txt), cv2.FONT_HERSHEY_SIMPLEX, FONT_SCALE, cor_texto, THICKNESS)
+        for i in range(len(lista_bueiros)):
+            if i in indices_processados: continue
+            
+            base = lista_bueiros[i]
+            fundido = False
+
+            # Compara com todos os outros itens seguintes
+            for j in range(i + 1, len(lista_bueiros)):
+                if j in indices_processados: continue
+                
+                candidato = lista_bueiros[j]
+                
+                # Se for o mesmo tipo e tiver QUALQUER sobreposição (> 0.01)
+                if base['label'] == candidato['label'] and get_iou(base['box'], candidato['box']) > 0.01:
+                    # Cria um super-box contendo os dois
+                    novo_x1 = min(base['box'][0], candidato['box'][0])
+                    novo_y1 = min(base['box'][1], candidato['box'][1])
+                    novo_x2 = max(base['box'][2], candidato['box'][2])
+                    novo_y2 = max(base['box'][3], candidato['box'][3])
+                    
+                    base['box'] = [novo_x1, novo_y1, novo_x2, novo_y2]
+                    base['conf'] = max(base['conf'], candidato['conf'])
+                    
+                    indices_processados.add(j) # Marca o segundo como "já usado"
+                    houve_fusao = True # Avisa que houve mudança, precisaremos rodar de novo
+            
+            nova_lista.append(base)
+        
+        lista_bueiros = nova_lista
+        if not houve_fusao:
+            break # Se rodou a lista toda e não fundiu nada, terminamos
+            
+    return lista_bueiros
+
+def desenhar_etiqueta(img, texto, x, y, cor_fundo, cor_texto=(0,0,0), posicao='topo'):
+    img_pil = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    draw = ImageDraw.Draw(img_pil)
+
+    font_size = 14 
+    try:
+        font = ImageFont.truetype("arial.ttf", font_size)
+    except IOError:
+        try:
+            font = ImageFont.truetype("DejaVuSans.ttf", font_size)
+        except:
+            font = ImageFont.load_default()
+
+    bbox = draw.textbbox((0, 0), texto, font=font)
+    w_txt = bbox[2] - bbox[0]
+    h_txt = bbox[3] - bbox[1]
+    pad = PADDING 
+
+    h_img, _, _ = img.shape
+    if posicao == 'topo':
+        y_bg_top = max(0, y - h_txt - (pad * 2))
+        y_bg_bottom = y
+        pt_txt = (x + pad, y_bg_top + pad - 2)
+    else:
+        y_bg_top = y
+        y_bg_bottom = min(h_img, y + h_txt + (pad * 2))
+        pt_txt = (x + pad, y + pad - 2)
+
+    draw.rectangle([x, y_bg_top, x + w_txt + (pad * 2), y_bg_bottom], fill=cor_fundo[::-1])
+    draw.text(pt_txt, texto, font=font, fill=cor_texto[::-1])
+    img[:] = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
 
 def processar_arquivo_unico(file_data, file_name, conf_buraco, conf_bueiro, detection_mode):
     nparr = np.frombuffer(file_data, np.uint8)
@@ -95,39 +160,29 @@ def processar_arquivo_unico(file_data, file_name, conf_buraco, conf_bueiro, dete
     raw_bueiros = [] 
     raw_buracos = []
 
-    # 1. DETECÇÃO DE BUEIROS (ALTA RESOLUÇÃO)
+    # 1. DETECÇÃO DE BUEIROS
     if "bueiro" in models:
         res_b = models["bueiro"].predict(
-            source=img_original, 
-            save=False, 
-            conf=conf_bueiro, 
-            iou=0.5, 
-            verbose=False,
-            imgsz=RESOLUCAO_IA  # <--- APLICA RESOLUÇÃO AQUI
+            source=img_original, save=False, conf=conf_bueiro, iou=0.5, verbose=False, imgsz=RESOLUCAO_IA
         )
         for box in res_b[0].boxes:
             cls_name = res_b[0].names[int(box.cls[0])]
             label_pt = TRADUCAO_BUEIRO.get(cls_name, cls_name)
-            
-            # Filtro de rigor para bueiro 'Bom'
-            if label_pt == 'Bom' and float(box.conf[0]) < 0.50: continue
-
+            if label_pt == 'TAMPÃO (BOM)' and float(box.conf[0]) < 0.50: continue
             x1,y1,x2,y2 = map(int, box.xyxy[0])
             raw_bueiros.append({'box': [x1,y1,x2,y2], 'label': label_pt, 'conf': float(box.conf[0])})
 
-    # 2. DETECÇÃO DE BURACOS (ALTA RESOLUÇÃO)
+    # --- NOVO: APLICA A FUSÃO DE BUEIROS IMEDIATAMENTE ---
+    # Isso junta a tampa solta com o buraco ANTES de calcular conflitos
+    raw_bueiros = fundir_bueiros_recursivo(raw_bueiros)
+
+    # 2. DETECÇÃO DE BURACOS
     model_buraco = models.get("mask" if detection_mode == 'mask' else "box")
     if model_buraco:
         res_p = model_buraco.predict(
-            source=img_original, 
-            save=False, 
-            conf=conf_buraco, 
-            iou=0.4, 
-            verbose=False,
-            imgsz=RESOLUCAO_IA  # <--- APLICA RESOLUÇÃO AQUI TAMBÉM
+            source=img_original, save=False, conf=conf_buraco, iou=0.4, verbose=False, imgsz=RESOLUCAO_IA
         )
         r = res_p[0]
-        
         if detection_mode == 'mask' and r.masks:
             for i, mask in enumerate(r.masks):
                 cnt = mask.xy[0].astype(np.int32)
@@ -142,16 +197,18 @@ def processar_arquivo_unico(file_data, file_name, conf_buraco, conf_bueiro, dete
                 area = calcular_area_cm2((x2-x1)*(y2-y1))
                 raw_buracos.append({'box': [x1,y1,x2,y2], 'cnt': None, 'area': area, 'mass': calcular_cbuq_kg(area), 'conf': float(box.conf[0])})
 
-    # 3. CONFLITOS
+    # 3. CONFLITOS (BURACO vs BUEIRO JÁ FUNDIDO)
     remover_bueiro_idx = set()
     remover_buraco_idx = set()
 
     for i, bueiro in enumerate(raw_bueiros):
         for j, buraco in enumerate(raw_buracos):
             if get_iou(bueiro['box'], buraco['box']) > 0.1:
-                if bueiro['label'] in ['Quebrado', 'Aberto', 'Sem Tampa']:
+                # Prioridade: Bueiro ruim anula buraco
+                if bueiro['label'] in ['TAMPÃO (QUEBRADO)', 'BUEIRO (ABERTO)', 'BUEIRO (SEM TAMPA)']:
                     remover_buraco_idx.add(j)
-                elif bueiro['label'] == 'Bom':
+                # Prioridade: Bueiro bom anula a si mesmo se tiver buraco (raro, mas mantém lógica)
+                elif bueiro['label'] == 'TAMPÃO (BOM)':
                     remover_bueiro_idx.add(i)
 
     # 4. DESENHO FINAL
@@ -171,15 +228,18 @@ def processar_arquivo_unico(file_data, file_name, conf_buraco, conf_bueiro, dete
         
         x1, y1, x2, y2 = obj['box']
         cv2.rectangle(img_original, (x1,y1), (x2,y2), COR_BURACO, THICKNESS)
-        desenhar_etiqueta(img_original, f"Buraco {count_obj}", x1, y1, COR_BURACO, (0,0,0), 'topo')
+        desenhar_etiqueta(img_original, f"BURACO {count_obj}", x1, y1, COR_BURACO, (0,0,0), 'topo')
         
         relatorio.append({
-            "id": f"#{count_obj}", "tipo": "Buraco", "detalhe": f"{(obj['area']/10000):.4f} m²",
+            "id": f"#{count_obj}", "tipo": "BURACO", "detalhe": f"{(obj['area']/10000):.4f} m²",
             "extra": f"{(obj['mass']/1000):.3f} t", "conf": f"{obj['conf']:.2f}"
         })
 
-    # Desenha Bueiros
+    # Desenha Bueiros (Agora a lista raw_bueiros já está limpa e fundida)
     bueiros_finais = []
+    
+    # Pequena verificação final para duplicados de tipos DIFERENTES (Ex: Aberto sobrepondo Quebrado)
+    # A função recursiva já resolveu os de tipos IGUAIS.
     for i, b in enumerate(raw_bueiros):
         if i in remover_bueiro_idx: continue
         
@@ -187,7 +247,9 @@ def processar_arquivo_unico(file_data, file_name, conf_buraco, conf_bueiro, dete
         for existente in bueiros_finais:
             if get_iou(b['box'], existente['box']) > 0.3:
                 duplicado = True
-                if b['label'] == 'Quebrado' and existente['label'] in ['Aberto', 'Sem Tampa']: existente.update(b)
+                # Mantém o mais grave
+                if b['label'] == 'TAMPÃO (QUEBRADO)' and existente['label'] in ['BUEIRO (ABERTO)', 'BUEIRO (SEM TAMPA)']:
+                    existente.update(b)
                 break
         if not duplicado: bueiros_finais.append(b)
 
@@ -195,13 +257,13 @@ def processar_arquivo_unico(file_data, file_name, conf_buraco, conf_bueiro, dete
         count_obj += 1
         x1,y1,x2,y2 = obj['box']
         color = CORES_BUEIRO.get(obj['label'], (255,0,0))
-        txt_color = (0,0,0) if obj['label'] == 'Bom' else (255,255,255)
+        txt_color = (0,0,0) if obj['label'] == 'TAMPÃO (BOM)' else (255,255,255)
         
         cv2.rectangle(img_original, (x1,y1), (x2,y2), color, THICKNESS)
         desenhar_etiqueta(img_original, obj['label'], x1, y2, color, txt_color, 'fundo')
 
         relatorio.append({
-            "id": f"#{count_obj}", "tipo": "Bueiro", "detalhe": obj['label'],
+            "id": f"#{count_obj}", "tipo": "BUEIRO", "detalhe": obj['label'],
             "extra": "-", "conf": f"{obj['conf']:.2f}"
         })
 
