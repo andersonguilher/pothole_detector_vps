@@ -1,26 +1,188 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<title>Documentação do Pothole Detector</title>
-</head>
-<body>
-<h1>Pothole Detector – Documentação Completa</h1>
-<p>Aplicação Python FastAPI para detecção de buracos em vias urbanas utilizando YOLOv8.</p>
 
-<h2>Arquitetura Geral</h2>
-<pre>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConservApp AI - Detecção Combinada - Documentação</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #1e3a8a;
+            border-bottom: 2px solid #bfdbfe;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: #374151;
+            border-left: 5px solid #60a5fa;
+            padding-left: 10px;
+            margin-top: 25px;
+        }
+
+        h3 {
+            color: #4b5563;
+            margin-top: 15px;
+        }
+
+        pre {
+            background: #e5e7eb;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+
+        code {
+            background: #f3f4f6;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        ul {
+            list-style: disc;
+            margin-left: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            font-size: 0.9em;
+        }
+
+        th {
+            background-color: #f9fafb;
+            color: #1f2937;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>ConservApp AI – Detecção Combinada (FastAPI + YOLOv8)</h1>
+        <p>Aplicação Python FastAPI para detecção de **Buracos e Bueiros** em vias urbanas utilizando uma arquitetura de
+            **Múltiplos Modelos YOLOv8** e cálculos de engenharia para estimativa de reparo.</p>
+
+        <h2>Arquitetura Geral</h2>
+        <pre>
 📂 detector/
- ├── main.py
+ ├── main.py              # Ponto de entrada da aplicação (FastAPI) e lógica de detecção.
  ├── templates/
- │    └── upload.html
+ │    └── index.html       # Frontend principal para upload e visualização de resultados.
  ├── static/
- │    └── style.css (opcional)
- └── requirements.txt
+ │    └── style.css        # Arquivo de estilos CSS (opcional, para customização visual).
+ └── requirements.txt     # Lista de dependências Python.
 </pre>
 
-<h2>Configuração de Proxy Reverso (Nginx)</h2>
-<pre>
+        <h2>Modelos e Pipeline de Detecção (`main.py`)</h2>
+        <p>O backend utiliza três modelos YOLOv8 carregados no início, permitindo a detecção dual e a escolha entre
+            detecção por caixa (Box) ou segmentação (Mask).</p>
+
+        <h3>Modelos Utilizados</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Modelo</th>
+                    <th>Arquivo</th>
+                    <th>Finalidade</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Buraco (Box)</td>
+                    <td><code>buracos_box.pt</code></td>
+                    <td>Detecção rápida (Bounding Box) de buracos.</td>
+                </tr>
+                <tr>
+                    <td>Buraco (Máscara)</td>
+                    <td><code>buracos_seg.pt</code></td>
+                    <td>Segmentação precisa para cálculo exato de área.</td>
+                </tr>
+                <tr>
+                    <td>Bueiro</td>
+                    <td><code>bueiros_det.pt</code></td>
+                    <td>Detecção e classificação do estado (Bom, Quebrado, Aberto).</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Lógica de Negócio (Física)</h3>
+        <p>A aplicação integra cálculos de engenharia civil baseados nas seguintes constantes (definidas no
+            <code>main.py</code>):</p>
+        <ul>
+            <li><code>PIXEL_TO_CM2 = 0.04</code>: Fator de conversão para área de pixel.</li>
+            <li><code>DENSIDADE_CBUQ_TM3 = 2.4</code>: Densidade do CBUQ em $t/m^3$.</li>
+            <li><code>ESPESSURA_CM = 5</code>: Espessura de referência para o cálculo de massa (5 cm).</li>
+        </ul>
+
+        <h3>Resolução de Conflitos (IOU)</h3>
+        <p>É aplicada a lógica de Intersection Over Union (IOU) para garantir a integridade dos dados:</p>
+        <ul>
+            <li>**Bueiro Danificado vs. Buraco:** Se um buraco se sobrepõe a um bueiro danificado (Quebrado/Aberto), o
+                buraco é **descartado** para evitar duplicidade, creditando o dano ao bueiro.</li>
+            <li>**Bueiro Bom vs. Buraco:** Se um buraco se sobrepõe a um bueiro Bom, o bueiro é **descartado**,
+                priorizando o dano do asfalto.</li>
+        </ul>
+
+        <h2>Interface do Usuário (`index.html`)</h2>
+        <p>O frontend permite o controle dinâmico dos parâmetros de detecção e exibe o relatório final de forma
+            responsiva.</p>
+
+        <h3>Parâmetros Dinâmicos</h3>
+        <ul>
+            <li>**Confiança Buraco:** Controla o score mínimo para aceitar detecções de buraco.</li>
+            <li>**Confiança Bueiro:** Controla o score mínimo para aceitar detecções de bueiro.</li>
+            <li>**Modo de Detecção:** Escolhe entre o modelo `box` ou `mask`.</li>
+        </ul>
+
+        <h2>Requisitos de Dependências</h2>
+        <pre>
+fastapi
+uvicorn
+jinja2
+python-multipart
+ultralytics
+opencv-python
+numpy
+</pre>
+
+        <h2>Execução do Servidor Uvicorn</h2>
+        <pre>
+uvicorn main:app --host 0.0.0.0 --port 8000
+</pre>
+        <p>Acessível em <code>http://127.0.0.1:8000/</code> para a interface web ou
+            <code>http://127.0.0.1:8000/docs</code> para a documentação interativa da API.</p>
+
+        <h2>Configuração de Proxy Reverso (Nginx)</h2>
+        <p>Para produção, use o Nginx para servir a aplicação sob o subdiretório <code>/detector/</code>.</p>
+        <pre>
 location /detector/ {
     proxy_pass http://127.0.0.1:8000/;  # A barra no final é importante
     proxy_set_header Host $host;
@@ -34,21 +196,7 @@ location /detector/ {
 }
 </pre>
 
-<h2>Requisitos</h2>
-<pre>
-fastapi
-uvicorn
-jinja2
-python-multipart
-ultralytics
-opencv-python
-numpy
-</pre>
-
-<h2>Execução</h2>
-<pre>
-uvicorn main:app --host 0.0.0.0 --port 8000
-</pre>
-
+    </div>
 </body>
+
 </html>

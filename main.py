@@ -18,13 +18,13 @@ app.mount("/templates", StaticFiles(directory="templates"), name="templates_stat
 # --- CARREGAMENTO DOS MODELOS ---
 models = {}
 print("-" * 30)
-try: models["box"] = YOLO("buracos_box.pt"); print("✅ buracos_box.pt (Buracos) carregado.")
+try: models["box"] = YOLO("models/buracos_box.pt"); print("✅ buracos_box.pt (Buracos) carregado.")
 except: print("❌ Erro ao carregar buracos_box.pt")
 
-try: models["mask"] = YOLO("buracos_seg.pt"); print("✅ buracos_seg.pt (Mask) carregado.")
+try: models["mask"] = YOLO("models/buracos_seg.pt"); print("✅ buracos_seg.pt (Mask) carregado.")
 except: print("⚠️ buracos_seg.pt não encontrado.")
 
-try: models["bueiro"] = YOLO("bueiros_det.pt"); print("✅ bueiros_det.pt (Bueiros) carregado.")
+try: models["bueiro"] = YOLO("models/bueiros_det.pt"); print("✅ bueiros_det.pt (Bueiros) carregado.")
 except: print("❌ bueiros_det.pt não encontrado.")
 print("-" * 30)
 
