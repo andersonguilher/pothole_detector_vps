@@ -36,6 +36,21 @@
         .animate-fade-in {
             animation: fadeIn 0.5s ease-out forwards;
         }
+
+        /* Classes para o slide/acordeão */
+        .slide-content-hidden {
+            max-height: 0;
+            opacity: 0;
+            padding: 0 1.5rem;
+            transition: max-height 0.4s ease-out, opacity 0.3s ease-out, padding 0.4s ease-out;
+        }
+
+        .slide-content-visible {
+            max-height: 500px;
+            opacity: 1;
+            padding: 1.5rem;
+            transition: max-height 0.4s ease-in, opacity 0.3s ease-in 0.1s, padding 0.4s ease-in;
+        }
     </style>
 </head>
 
@@ -53,49 +68,107 @@
 
     <main class="max-w-6xl mx-auto mt-8 p-4">
 
-        <div class="bg-white p-6 rounded-xl shadow-md mb-8">
-            <h3 class="text-lg font-semibold text-slate-700 mb-4 border-b pb-2">Configurações de Detecção</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                    <label class="block text-sm font-medium text-slate-600 mb-1">Confiança Buraco:</label>
-                    <div class="flex items-center space-x-2">
-                        <input type="range" id="conf-buraco" min="0.1" max="0.9" step="0.01" value="0.25"
-                            class="w-full">
-                        <span id="val-buraco" class="font-bold text-blue-700 bg-slate-100 px-2 rounded">0.22</span>
+        <div class="bg-white rounded-xl shadow-md mb-8">
+            <div id="config-header" onclick="toggleConfigs()"
+                class="flex justify-between items-center p-6 cursor-pointer hover:bg-slate-50 transition rounded-t-xl">
+                <h3 class="text-lg font-semibold text-slate-700">
+                    <i id="config-icon" class="fa-solid fa-angle-right mr-2 transition-transform duration-400"></i>
+                    Configurações de Detecção (Clique para Expandir)
+                </h3>
+                <button onclick="event.stopPropagation(); resetConfigs();"
+                    class="bg-red-500 text-white px-3 py-1 text-sm rounded hover:bg-red-600 transition">
+                    <i class="fa-solid fa-sync-alt mr-1"></i> Redefinir
+                </button>
+            </div>
+
+            <div id="config-content" class="slide-content-hidden overflow-hidden">
+                <div class="pt-0 pb-6 border-t">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Confiança Buraco:</label>
+                            <div class="flex items-center space-x-2">
+                                <input type="range" id="conf-buraco" min="0.1" max="0.9" step="0.01" value="0.25"
+                                    class="w-full">
+                                <span id="val-buraco"
+                                    class="font-bold text-blue-700 bg-slate-100 px-2 rounded">0.25</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Confiança Bueiro:</label>
+                            <div class="flex items-center space-x-2">
+                                <input type="range" id="conf-bueiro" min="0.1" max="0.9" step="0.01" value="0.30"
+                                    class="w-full">
+                                <span id="val-bueiro"
+                                    class="font-bold text-blue-700 bg-slate-100 px-2 rounded">0.30</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Resolução IA (px):</label>
+                            <select id="resolution-select" class="w-full border p-2 rounded" data-default="736">
+                                <option value="416">416</option>
+                                <option value="640">640</option>
+                                <option value="736">736 (Padrão)</option>
+                                <option value="960">960</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Modo Visual:</label>
+                            <select id="mode-select" class="w-full border p-2 rounded" data-default="box">
+                                <option value="box">Caixa (Rápido)</option>
+                                <option value="mask">Máscara (Preciso)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-1">PIXEL_TO_CM²:</label>
+                            <input type="number" id="pixel-to-cm2" min="0.00001" step="0.00001" value="0.04"
+                                data-default="0.04" class="w-full border p-2 rounded font-mono text-sm text-blue-700">
+                        </div>
+
+                        <div>
+                            <label class="flex items-center text-sm font-medium text-slate-600">
+                                <input type="checkbox" id="calculate-measures" class="mr-2" checked data-default="true">
+                                Habilitar cálculos (Área/Massa)
+                            </label>
+                        </div>
+                        <div id="measure-display-group" class="md:col-span-2">
+                            <label class="block text-sm font-medium text-slate-600 mb-1">Exibir na Etiqueta:</label>
+                            <select id="measure-display-select" class="w-full border p-2 rounded" data-default="both">
+                                <option value="none">Confiança Apenas</option>
+                                <option value="dimensions">Dimensões (LxA)</option>
+                                <option value="area">Área (m²)</option>
+                                <option value="both">Dimensões + Área (LxA = Área)</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-600 mb-1">Confiança Bueiro:</label>
-                    <div class="flex items-center space-x-2">
-                        <input type="range" id="conf-bueiro" min="0.1" max="0.9" step="0.01" value="0.3" class="w-full">
-                        <span id="val-bueiro" class="font-bold text-blue-700 bg-slate-100 px-2 rounded">0.30</span>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-600 mb-1">Modo Visual:</label>
-                    <select id="mode-select" class="w-full border p-2 rounded">
-                        <option value="box">Caixa (Rápido)</option>
-                        <option value="mask">Máscara (Preciso)</option>
-                    </select>
                 </div>
             </div>
         </div>
-
         <div id="upload-area"
             class="bg-white rounded-xl shadow-md p-8 text-center border-2 border-dashed border-slate-300 hover:border-blue-500 transition">
-            <input type="file" id="file-input" class="hidden" accept="image/*" multiple>
+
+            <input type="file" id="camera-input" class="hidden" accept="image/*" multiple capture="environment">
+            <input type="file" id="gallery-input" class="hidden" accept="image/*" multiple>
+
             <div id="upload-ui">
                 <i class="fa-solid fa-cloud-arrow-up text-4xl text-blue-500 mb-4"></i>
                 <h3 class="text-xl font-medium text-slate-700">Selecione suas fotos</h3>
                 <p class="text-sm text-slate-400 mb-6">Detecta Buracos e Bueiros simultaneamente</p>
-                <button onclick="document.getElementById('file-input').click()"
-                    class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 shadow-lg">
-                    <i class="fa-solid fa-camera mr-2"></i> Abrir Câmera / Galeria
-                </button>
+
+                <div class="flex justify-center space-x-4">
+                    <button onclick="document.getElementById('camera-input').click()"
+                        class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 shadow-lg">
+                        <i class="fa-solid fa-camera mr-2"></i> Abrir Câmera
+                    </button>
+                    <button onclick="document.getElementById('gallery-input').click()"
+                        class="bg-slate-300 text-slate-800 px-6 py-3 rounded-lg hover:bg-slate-400 shadow-lg">
+                        <i class="fa-solid fa-images mr-2"></i> Galeria/Arquivos
+                    </button>
+                </div>
             </div>
             <div id="loading" class="hidden mt-4">
                 <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto"></div>
                 <p class="mt-2 text-blue-600">Processando Inteligência Artificial...</p>
+                <p id="loading-detail" class="text-xs text-slate-500 mt-1"></p>
             </div>
         </div>
 
@@ -139,36 +212,121 @@
     <script>
         const confBuraco = document.getElementById('conf-buraco');
         const confBueiro = document.getElementById('conf-bueiro');
-        const fileInput = document.getElementById('file-input');
+        const resolutionSelect = document.getElementById('resolution-select');
+        const modeSelect = document.getElementById('mode-select');
+        const pixelToCm2 = document.getElementById('pixel-to-cm2');
+        const calculateMeasures = document.getElementById('calculate-measures');
+        const measureDisplaySelect = document.getElementById('measure-display-select');
+        const measureDisplayGroup = document.getElementById('measure-display-group');
+
+        // NOVOS INPUTS
+        const cameraInput = document.getElementById('camera-input');
+        const galleryInput = document.getElementById('gallery-input');
+
+        const loadingDetail = document.getElementById('loading-detail'); // Elemento para feedback de carregamento
+
+        // Elementos do slide
+        const configContent = document.getElementById('config-content');
+        const configIcon = document.getElementById('config-icon');
+
         let currentFiles = [];
         let lastData = null;
 
-        // Atualiza labels dos sliders
-        confBuraco.oninput = () => document.getElementById('val-buraco').textContent = confBuraco.value;
-        confBueiro.oninput = () => document.getElementById('val-bueiro').textContent = confBueiro.value;
+        const CONFIG_KEY = 'conservapp_config';
+        const DEFAULT_CONFIG = {
+            confBuraco: 0.25,
+            confBueiro: 0.30,
+            resolution: 736,
+            mode: 'box',
+            pixelToCm2: 0.04,
+            measures: true,
+            displayMode: 'both',
+            isExpanded: false
+        };
 
-        // Se mudar slider, reprocessa se já tiver foto
-        [confBuraco, confBueiro, document.getElementById('mode-select')].forEach(el => {
-            el.onchange = () => { if (currentFiles.length) processFiles(currentFiles); };
-        });
+        // --- FUNÇÃO DE COMPRESSÃO DE IMAGEM ---
+        function compressFile(file, maxWidth = 2048, quality = 0.7) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = event => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
 
-        fileInput.onchange = (e) => { if (e.target.files.length) processFiles(e.target.files); };
+                        // Redimensiona se a largura for maior que o máximo
+                        if (width > maxWidth) {
+                            height = Math.round(height * (maxWidth / width));
+                            width = maxWidth;
+                        }
 
-        async function processFiles(files) {
+                        canvas.width = width;
+                        canvas.height = height;
+
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // Converte para Blob JPG (com compressão)
+                        canvas.toBlob(blob => {
+                            // Cria um novo objeto File a partir do Blob
+                            const newFile = new File([blob], file.name, {
+                                type: 'image/jpeg',
+                                lastModified: Date.now()
+                            });
+                            resolve(newFile);
+                        }, 'image/jpeg', quality);
+                    };
+                    img.onerror = error => reject(error);
+                };
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        // --- FUNÇÃO CENTRAL QUE CHAMA A COMPRESSÃO ---
+        async function compressAndSendFiles(files) {
             currentFiles = files;
             document.getElementById('upload-ui').classList.add('hidden');
             document.getElementById('report-area').classList.add('hidden');
             document.getElementById('loading').classList.remove('hidden');
+            loadingDetail.textContent = `Preparando ${files.length} arquivos...`;
 
+            const compressedFiles = [];
+
+            // Loop para processar cada arquivo sequencialmente
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                loadingDetail.textContent = `Comprimindo imagem ${i + 1} de ${files.length}... (${file.name})`;
+                try {
+                    // Usaremos 1024px como um limite seguro para a maioria dos dispositivos/redes.
+                    const compressedFile = await compressFile(file, 1024, 0.7);
+                    compressedFiles.push(compressedFile);
+                } catch (e) {
+                    console.error("Erro ao comprimir o arquivo:", e);
+                    alert(`Erro ao processar a imagem ${file.name}. Tentando enviar original.`);
+                    compressedFiles.push(file); // Tenta enviar o original se a compressão falhar
+                }
+            }
+
+            loadingDetail.textContent = `Enviando arquivos...`;
+            await sendDetectionRequest(compressedFiles);
+        }
+
+        async function sendDetectionRequest(filesToSend) {
             const fd = new FormData();
             fd.append('confidence_buraco', confBuraco.value);
             fd.append('confidence_bueiro', confBueiro.value);
-            fd.append('detection_mode', document.getElementById('mode-select').value);
-            for (let f of files) fd.append('files', f);
+            fd.append('detection_mode', modeSelect.value);
+            fd.append('resolution_ia', resolutionSelect.value);
+            fd.append('pixel_to_cm2', pixelToCm2.value);
+            fd.append('calculate_measures', calculateMeasures.checked ? 'true' : 'false');
+            fd.append('measure_display_mode', measureDisplaySelect.value);
+
+            for (let f of filesToSend) fd.append('files', f);
 
             try {
-                // --- CORREÇÃO DO PROXY ---
-                // Adicionado /detector no início da URL
                 const req = await fetch('/detector/detectar', { method: 'POST', body: fd });
 
                 if (req.ok) {
@@ -183,47 +341,184 @@
                 console.error(e);
                 alert('Erro de conexão ou endpoint não encontrado (/detector/detectar).');
                 resetApp();
+            } finally {
+                loadingDetail.textContent = ''; // Limpa o detalhe do loading
             }
         }
+
+        // --- FUNÇÕES DE CONFIGURAÇÃO E UI ---
+
+        function toggleConfigs() {
+            const isExpanded = configContent.classList.toggle('slide-content-hidden');
+            configContent.classList.toggle('slide-content-visible');
+            configIcon.classList.toggle('fa-angle-right');
+            configIcon.classList.toggle('fa-angle-down');
+
+            saveConfig(isExpanded);
+        }
+
+        function saveConfig(isExpanded) {
+            const config = {
+                confBuraco: parseFloat(confBuraco.value),
+                confBueiro: parseFloat(confBueiro.value),
+                resolution: parseInt(resolutionSelect.value),
+                mode: modeSelect.value,
+                pixelToCm2: parseFloat(pixelToCm2.value),
+                measures: calculateMeasures.checked,
+                displayMode: measureDisplaySelect.value,
+                isExpanded: isExpanded === undefined ? !configContent.classList.contains('slide-content-hidden') : isExpanded
+            };
+            localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+        }
+
+        function loadConfig() {
+            const saved = localStorage.getItem(CONFIG_KEY);
+            const config = saved ? JSON.parse(saved) : DEFAULT_CONFIG;
+
+            confBuraco.value = config.confBuraco;
+            confBueiro.value = config.confBueiro;
+            resolutionSelect.value = config.resolution;
+            modeSelect.value = config.mode;
+            pixelToCm2.value = config.pixelToCm2;
+            calculateMeasures.checked = config.measures;
+            measureDisplaySelect.value = config.displayMode;
+
+            config.isExpanded = false; // FORÇA MINIMIZADO
+
+            if (config.isExpanded) {
+                configContent.classList.remove('slide-content-hidden');
+                configContent.classList.add('slide-content-visible');
+                configIcon.classList.add('fa-angle-down');
+                configIcon.classList.remove('fa-angle-right');
+            } else {
+                configContent.classList.add('slide-content-hidden');
+                configContent.classList.remove('slide-content-visible');
+                configIcon.classList.add('fa-angle-right');
+                configIcon.classList.remove('fa-angle-down');
+            }
+
+            updateLabels();
+        }
+
+        function resetConfigs() {
+            const currentState = !configContent.classList.contains('slide-content-hidden');
+            const defaultPixelToCm2 = document.getElementById('pixel-to-cm2').getAttribute('data-default');
+
+            localStorage.removeItem(CONFIG_KEY);
+            loadConfig();
+
+            pixelToCm2.value = defaultPixelToCm2;
+
+            saveConfig(currentState);
+
+            if (currentFiles.length) compressAndSendFiles(currentFiles);
+            alert('Configurações redefinidas para o padrão.');
+        }
+
+        function updateLabels() {
+            document.getElementById('val-buraco').textContent = parseFloat(confBuraco.value).toFixed(2);
+            document.getElementById('val-bueiro').textContent = parseFloat(confBueiro.value).toFixed(2);
+
+            const measuresEnabled = calculateMeasures.checked;
+
+            const displayStyle = measuresEnabled ? 'block' : 'none';
+            const totalTonElement = document.getElementById('total-ton');
+            const totalM2Element = document.getElementById('total-m2');
+
+            measureDisplayGroup.style.display = measuresEnabled ? 'block' : 'none';
+            pixelToCm2.closest('div').style.display = measuresEnabled ? 'block' : 'none';
+
+
+            if (totalTonElement) totalTonElement.closest('div').style.display = displayStyle;
+            if (totalM2Element) totalM2Element.closest('div').style.display = displayStyle;
+        }
+
+        // --- MANUSEIO DE EVENTOS ---
+        loadConfig();
+
+        [resolutionSelect, modeSelect, calculateMeasures, measureDisplaySelect, pixelToCm2].forEach(el => {
+            el.onchange = () => {
+                updateLabels();
+                saveConfig();
+                if (currentFiles.length) compressAndSendFiles(currentFiles); // Reprocessa com os novos settings
+            };
+        });
+
+        confBuraco.oninput = () => { updateLabels(); saveConfig(); };
+        confBueiro.oninput = () => { updateLabels(); saveConfig(); };
+        pixelToCm2.oninput = () => { updateLabels(); saveConfig(); };
+
+
+        // Chama a nova função compressAndSendFiles ao selecionar arquivos (NOVA LÓGICA)
+        cameraInput.onchange = (e) => {
+            if (e.target.files.length) compressAndSendFiles(e.target.files);
+        };
+        galleryInput.onchange = (e) => {
+            if (e.target.files.length) compressAndSendFiles(e.target.files);
+        };
+
+        // --- FUNÇÕES DE RESULTADOS E RESET ---
 
         function renderResults(data) {
             lastData = data;
             document.getElementById('loading').classList.add('hidden');
             document.getElementById('report-area').classList.remove('hidden');
 
+            const measuresEnabled = calculateMeasures.checked;
+
             // Atualiza Totais
             document.getElementById('total-ton').textContent = data.grand_totals.ton + ' t';
             document.getElementById('total-m2').textContent = data.grand_totals.m2 + ' m²';
             document.getElementById('total-count').textContent = data.grand_totals.count;
 
+            // Esconde colunas de total se medidas estiverem desativadas
+            document.getElementById('total-ton').closest('div').style.display = measuresEnabled ? 'block' : 'none';
+            document.getElementById('total-m2').closest('div').style.display = measuresEnabled ? 'block' : 'none';
+
+
             const grid = document.getElementById('results-grid');
             grid.innerHTML = '';
 
+            // Define o cabeçalho da tabela de resultados
+            const extraHeader = measuresEnabled ? '<th class="text-right">Extra</th>' : '';
+
             data.batch_results.forEach((item, idx) => {
                 // Monta linhas da tabela interna do card
-                let rows = item.report_data.map(d => `
+                let rows = item.report_data.map(d => {
+                    const extraData = measuresEnabled ? `<td class="p-1 text-right text-xs text-gray-400">${d.extra !== '-' ? d.extra : d.conf}</td>` : '';
+                    return `
                     <tr class="border-b text-sm">
                         <td class="p-1 font-bold text-gray-600">${d.id}</td>
                         <td class="p-1">${d.tipo}</td>
                         <td class="p-1 font-mono text-blue-700 font-bold">${d.detalhe}</td>
-                        <td class="p-1 text-right text-xs text-gray-400">${d.extra !== '-' ? d.extra : d.conf}</td>
+                        ${extraData}
                     </tr>
-                `).join('');
+                `}).join('');
 
-                if (!rows) rows = '<tr><td colspan="4" class="p-4 text-center text-gray-400 text-xs">Nada detectado</td></tr>';
+                if (!rows) rows = measuresEnabled
+                    ? '<tr><td colspan="4" class="p-4 text-center text-gray-400 text-xs">Nada detectado</td></tr>'
+                    : '<tr><td colspan="3" class="p-4 text-center text-gray-400 text-xs">Nada detectado</td></tr>';
+
 
                 grid.innerHTML += `
                     <div class="result-card">
                         <div class="p-2 bg-gray-50 border-b text-xs font-bold text-gray-500 truncate">${item.file_name}</div>
-                        <div class="relative h-48 bg-gray-200 cursor-pointer group" onclick="showModal('data:image/jpeg;base64,${item.image_b64}')">
-                            <img src="data:image/jpeg;base64,${item.image_b64}" class="w-full h-full object-cover">
+                        <div class="relative h-48 bg-gray-200 cursor-pointer group p-1" onclick="showModal('data:image/jpeg;base64,${item.image_b64}')">
+                            <img src="data:image/jpeg;base64,${item.image_b64}" class="w-full h-full object-contain">
                             <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition flex items-center justify-center">
                                 <span class="bg-black/50 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100">Ampliar</span>
                             </div>
                         </div>
                         <div class="p-3">
                             <table class="w-full text-left">
-                                <thead class="text-xs text-gray-400 uppercase"><tr><th>#</th><th>Tipo</th><th>Info</th><th class="text-right">Extra</th></tr></thead>
+                                <thead class="text-xs text-gray-400 uppercase">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Tipo</th>
+                                        <th>Info</th>
+                                        ${extraHeader}
+                                    </tr>
+                                </thead>
                                 <tbody>${rows}</tbody>
                             </table>
                         </div>
@@ -243,13 +538,33 @@
             document.getElementById('report-area').classList.add('hidden');
             document.getElementById('loading').classList.add('hidden');
             document.getElementById('upload-ui').classList.remove('hidden');
-            fileInput.value = '';
+            // Nota: Não é necessário limpar o fileInput, pois os novos inputs serão
+            // preenchidos com os arquivos mais recentes na próxima seleção.
+            // Limpar faria sentido se fosse um único input reusado.
+            loadingDetail.textContent = '';
         }
 
         function printReport() {
             if (!lastData) return;
             const w = window.open('', '_blank');
             const d = new Date().toLocaleString('pt-BR');
+            const measuresEnabled = calculateMeasures.checked;
+
+            const totalsDiv = measuresEnabled ? `
+                <div class="totals">
+                    TOTAL GERAL: ${lastData.grand_totals.count} Ocorrências |
+                    Área: ${lastData.grand_totals.m2} m² |
+                    Massa CBUQ: ${lastData.grand_totals.ton} t
+                </div>
+            ` : `
+                <div class="totals">
+                    TOTAL GERAL: ${lastData.grand_totals.count} Ocorrências
+                </div>
+            `;
+
+            const tableHeaders = measuresEnabled
+                ? '<tr><th>Tipo</th><th>Detalhe</th><th>Extra</th></tr>'
+                : '<tr><th>Tipo</th><th>Detalhe</th></tr>';
 
             // HTML Gerado para Impressão
             let html = `
@@ -271,17 +586,17 @@
                     <h1>Relatório de Vistoria</h1>
                     <span>${d}</span>
                 </div>
-                <div class="totals">
-                    TOTAL GERAL: ${lastData.grand_totals.count} Ocorrências | 
-                    Área: ${lastData.grand_totals.m2} m² | 
-                    Massa CBUQ: ${lastData.grand_totals.ton} t
-                </div>
+                ${totalsDiv}
             `;
 
             lastData.batch_results.forEach(item => {
-                let trs = item.report_data.map(x => `
-                    <tr><td>${x.tipo}</td><td>${x.detalhe}</td><td>${x.extra}</td></tr>
-                `).join('');
+                let trs = item.report_data.map(x => {
+                    return measuresEnabled
+                        ? `<tr><td>${x.tipo}</td><td>${x.detalhe}</td><td>${x.extra}</td></tr>`
+                        : `<tr><td>${x.tipo}</td><td>${x.detalhe}</td></tr>`;
+                }).join('');
+
+                const colspan = measuresEnabled ? 3 : 2;
 
                 html += `
                     <div class="card">
@@ -290,8 +605,8 @@
                             <strong>${item.file_name}</strong>
                             <br><br>
                             <table>
-                                <tr><th>Tipo</th><th>Detalhe</th><th>Extra</th></tr>
-                                ${trs || '<tr><td colspan="3">Nada detectado</td></tr>'}
+                                ${tableHeaders}
+                                ${trs || `<tr><td colspan="${colspan}">Nada detectado</td></tr>`}
                             </table>
                         </div>
                     </div>
