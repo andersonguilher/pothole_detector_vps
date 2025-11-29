@@ -1,624 +1,595 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ConservApp - Detecção Combinada</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>Auditoria Viária AI | Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .result-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e293b;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
         }
 
-        .result-card {
-            background: white;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Inter', sans-serif;
+            color: #334155;
+            overflow-x: hidden;
+        }
+
+        .navbar {
+            background-color: var(--secondary-color);
+            padding: 0.8rem 0;
+            z-index: 1030;
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+
+        .main-container {
+            max-width: 1600px;
+            margin: 20px auto;
+            padding: 0 20px;
+            transition: all 0.3s ease;
+        }
+
+        #toggleSidebarBtn {
+            cursor: pointer;
+            color: white;
+            font-size: 1.2rem;
+            margin-right: 15px;
+            transition: transform 0.2s;
+        }
+
+        #toggleSidebarBtn:hover {
+            transform: rotate(90deg);
+            color: var(--primary-color);
+        }
+
+        #sidebarCol {
+            transition: all 0.3s ease;
             overflow: hidden;
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .animate-fade-in {
-            animation: fadeIn 0.5s ease-out forwards;
-        }
-
-        /* Classes para o slide/acordeão */
-        .slide-content-hidden {
-            max-height: 0;
+        .sidebar-hidden {
+            width: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
             opacity: 0;
-            padding: 0 1.5rem;
-            transition: max-height 0.4s ease-out, opacity 0.3s ease-out, padding 0.4s ease-out;
+            display: none;
         }
 
-        .slide-content-visible {
-            max-height: 500px;
+        #mainContentCol {
+            transition: all 0.3s ease;
+        }
+
+        .card-panel {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .sticky-sidebar {
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+        }
+
+        h5 {
+            font-weight: 600;
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .form-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #64748b;
+            margin-bottom: 3px;
+        }
+
+        .form-control,
+        .form-select {
+            font-size: 0.85rem;
+            border-radius: 6px;
+            padding: 8px 12px;
+        }
+
+        .form-range::-webkit-slider-thumb {
+            background: var(--primary-color);
+        }
+
+        .btn {
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 10px 20px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .preview-container {
+            background: #0f172a;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            min-height: 400px;
+            max-height: 75vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-container img,
+        .preview-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        #galeria-objetos {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .thumb-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .thumb-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary-color);
+        }
+
+        .thumb-card img {
+            width: 100%;
+            height: 90px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .thumb-info {
+            padding: 6px;
+            text-align: left;
+        }
+
+        .thumb-id {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            font-weight: 700;
+        }
+
+        .thumb-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--secondary-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .modal-viewer {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 1200px;
+            text-align: center;
+        }
+
+        .modal-content-img {
+            max-width: 100%;
+            max-height: 85vh;
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            opacity: 0.8;
+        }
+
+        .close-btn:hover {
             opacity: 1;
-            padding: 1.5rem;
-            transition: max-height 0.4s ease-in, opacity 0.3s ease-in 0.1s, padding 0.4s ease-in;
+        }
+
+        .nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            transition: 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .prev-btn {
+            left: 20px;
+        }
+
+        .next-btn {
+            right: 20px;
         }
     </style>
 </head>
 
-<body class="bg-slate-100 min-h-screen font-sans">
+<body>
 
-    <nav class="bg-blue-900 text-white shadow-lg p-4">
-        <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <div class="flex items-center space-x-2">
-                <i class="fa-solid fa-road text-yellow-400 text-2xl"></i>
-                <span class="text-xl font-bold">ConservApp AI</span>
+    <nav class="navbar navbar-dark">
+        <div class="container-fluid main-container my-0">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-bars" id="toggleSidebarBtn" onclick="toggleSidebar()"
+                    title="Mostrar/Ocultar Configurações"></i>
+                <span class="navbar-brand ms-2"><i class="fas fa-road me-2"></i>Auditoria Viária IA</span>
             </div>
-            <div class="text-sm opacity-80">Modo Combinado</div>
+            <div class="text-white-50 small d-none d-md-block"><i class="fas fa-circle text-success me-1"
+                    style="font-size: 8px;"></i> Sistema Online</div>
         </div>
     </nav>
 
-    <main class="max-w-6xl mx-auto mt-8 p-4">
+    <div id="imageModal" class="modal-viewer">
+        <span class="close-btn" onclick="fecharModal()"><i class="fas fa-times"></i></span>
+        <div class="nav-btn prev-btn" onclick="mudarSlide(1)"><i class="fas fa-chevron-left"></i></div>
+        <div class="nav-btn next-btn" onclick="mudarSlide(-1)"><i class="fas fa-chevron-right"></i></div>
+        <div class="modal-container"><img class="modal-content-img" id="img01">
+            <div class="modal-caption text-white mt-3" id="caption"></div>
+        </div>
+    </div>
 
-        <div class="bg-white rounded-xl shadow-md mb-8">
-            <div id="config-header" onclick="toggleConfigs()"
-                class="flex justify-between items-center p-6 cursor-pointer hover:bg-slate-50 transition rounded-t-xl">
-                <h3 class="text-lg font-semibold text-slate-700">
-                    <i id="config-icon" class="fa-solid fa-angle-right mr-2 transition-transform duration-400"></i>
-                    Configurações de Detecção (Clique para Expandir)
-                </h3>
-                <button onclick="event.stopPropagation(); resetConfigs();"
-                    class="bg-red-500 text-white px-3 py-1 text-sm rounded hover:bg-red-600 transition">
-                    <i class="fa-solid fa-sync-alt mr-1"></i> Redefinir
-                </button>
-            </div>
-
-            <div id="config-content" class="slide-content-hidden overflow-hidden">
-                <div class="pt-0 pb-6 border-t">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-600 mb-1">Confiança Buraco:</label>
-                            <div class="flex items-center space-x-2">
-                                <input type="range" id="conf-buraco" min="0.1" max="0.9" step="0.01" value="0.25"
-                                    class="w-full">
-                                <span id="val-buraco"
-                                    class="font-bold text-blue-700 bg-slate-100 px-2 rounded">0.25</span>
+    <div class="container-fluid main-container">
+        <div class="row" id="mainRow">
+            <div class="col-lg-3 col-md-4" id="sidebarCol">
+                <div class="sticky-sidebar">
+                    <div class="card-panel">
+                        <h5><i class="fas fa-sliders-h me-2"></i> Parâmetros</h5>
+                        <form id="configForm">
+                            <div class="mb-3">
+                                <label class="form-label d-flex justify-content-between"><span>Buraco
+                                        (Conf.)</span><span class="badge bg-primary rounded-pill"
+                                        id="confBuracoVal">25%</span></label>
+                                <input type="range" class="form-range inputs-config" id="confBuraco" min="0.1" max="1.0"
+                                    step="0.05" value="0.25">
                             </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-600 mb-1">Confiança Bueiro:</label>
-                            <div class="flex items-center space-x-2">
-                                <input type="range" id="conf-bueiro" min="0.1" max="0.9" step="0.01" value="0.30"
-                                    class="w-full">
-                                <span id="val-bueiro"
-                                    class="font-bold text-blue-700 bg-slate-100 px-2 rounded">0.30</span>
+                            <div class="mb-3">
+                                <label class="form-label d-flex justify-content-between"><span>Bueiro
+                                        (Conf.)</span><span class="badge bg-secondary rounded-pill"
+                                        id="confBueiroVal">30%</span></label>
+                                <input type="range" class="form-range inputs-config" id="confBueiro" min="0.1" max="1.0"
+                                    step="0.05" value="0.30">
                             </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-600 mb-1">Resolução IA (px):</label>
-                            <select id="resolution-select" class="w-full border p-2 rounded" data-default="736">
-                                <option value="416">416</option>
-                                <option value="640">640</option>
-                                <option value="736">736 (Padrão)</option>
-                                <option value="960">960</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-600 mb-1">Modo Visual:</label>
-                            <select id="mode-select" class="w-full border p-2 rounded" data-default="box">
-                                <option value="box">Caixa (Rápido)</option>
-                                <option value="mask">Máscara (Preciso)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-600 mb-1">PIXEL_TO_CM²:</label>
-                            <input type="number" id="pixel-to-cm2" min="0.00001" step="0.00001" value="0.04"
-                                data-default="0.04" class="w-full border p-2 rounded font-mono text-sm text-blue-700">
-                        </div>
+                            <div class="row mb-3">
+                                <div class="col-6"><label class="form-label">Resolução</label><select
+                                        class="form-select inputs-config" id="resolutionIA">
+                                        <option value="640">640p</option>
+                                        <option value="736" selected>736p</option>
+                                        <option value="1280">1280p</option>
+                                    </select></div>
+                                <div class="col-6"><label class="form-label">cm/px</label><input type="number"
+                                        class="form-control inputs-config" id="pixelCm" value="0.04" step="0.01"></div>
+                            </div>
 
-                        <div>
-                            <label class="flex items-center text-sm font-medium text-slate-600">
-                                <input type="checkbox" id="calculate-measures" class="mr-2" checked data-default="true">
-                                Habilitar cálculos (Área/Massa)
-                            </label>
-                        </div>
-                        <div id="measure-display-group" class="md:col-span-2">
-                            <label class="block text-sm font-medium text-slate-600 mb-1">Exibir na Etiqueta:</label>
-                            <select id="measure-display-select" class="w-full border p-2 rounded" data-default="both">
-                                <option value="none">Confiança Apenas</option>
-                                <option value="dimensions">Dimensões (LxA)</option>
-                                <option value="area">Área (m²)</option>
-                                <option value="both">Dimensões + Área (LxA = Área)</option>
-                            </select>
-                        </div>
+                            <div class="mb-3 p-2 border rounded bg-light">
+                                <label class="form-label mb-2">Info na Etiqueta</label>
+                                <div class="form-check"><input class="form-check-input inputs-config" type="checkbox"
+                                        id="showId" checked><label class="form-check-label small">ID (#)</label></div>
+                                <div class="form-check"><input class="form-check-input inputs-config" type="checkbox"
+                                        id="showType" checked><label class="form-check-label small">Tipo</label></div>
+                                <div class="form-check"><input class="form-check-input inputs-config" type="checkbox"
+                                        id="showConf" checked><label
+                                        class="form-check-label small">Confiabilidade</label></div>
+                                <div class="form-check"><input class="form-check-input inputs-config" type="checkbox"
+                                        id="showDim" checked><label class="form-check-label small">Dimensões</label>
+                                </div>
+                                <div class="form-check"><input class="form-check-input inputs-config" type="checkbox"
+                                        id="showArea" checked><label class="form-check-label small">Área</label></div>
+                            </div>
+
+                            <div class="form-check form-switch mb-2"><input class="form-check-input inputs-config"
+                                    type="checkbox" id="calcMeasures" checked><label class="form-check-label small"
+                                    for="calcMeasures">Calcular Massa Asfáltica</label></div>
+
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input inputs-config" type="checkbox" id="filterSize"
+                                    onchange="toggleSizeInput()">
+                                <label class="form-check-label small" for="filterSize">Filtrar Bueiro por
+                                    Tamanho</label>
+                            </div>
+                            <div class="mb-3" id="sizeInputArea" style="display:none;">
+                                <label class="form-label small">Tamanho Alvo (m)</label>
+                                <input type="number" class="form-control inputs-config form-control-sm" id="targetSize"
+                                    value="0.90" step="0.01">
+                                <div class="form-text" style="font-size: 0.7rem;">Captura +/- 4% (Ex: 0.90 -> 0.86 a
+                                    0.94)</div>
+                            </div>
+
+                            <div class="form-check form-switch mb-4"><input class="form-check-input inputs-config"
+                                    type="checkbox" id="showLine"><label class="form-check-label small"
+                                    for="showLine">Ver Linha Disparo (60%)</label></div>
+
+                            <hr class="my-3" style="opacity:0.1">
+                            <ul class="nav nav-pills nav-fill mb-3" id="pills-tab">
+                                <li class="nav-item"><button class="nav-link active py-1" id="pills-video-tab"
+                                        data-bs-toggle="pill" data-bs-target="#pills-video"><i class="fas fa-file"></i>
+                                        Arquivo</button></li>
+                                <li class="nav-item"><button class="nav-link py-1" id="pills-live-tab"
+                                        data-bs-toggle="pill" data-bs-target="#pills-live"><i class="fas fa-wifi"></i>
+                                        Live</button></li>
+                            </ul>
+                            <div class="tab-content">
+                                <div class="tab-pane fade show active" id="pills-video">
+                                    <input type="file" class="form-control form-control-sm mb-3" id="videoInput"
+                                        accept="video/*">
+                                    <div class="d-grid gap-2"><button type="button" class="btn btn-primary btn-sm"
+                                            id="btnProcessar" onclick="processarVideo()">INICIAR</button><button
+                                            type="button" class="btn btn-danger btn-sm" id="btnCancelar"
+                                            onclick="cancelarProcessamento()" style="display:none;">CANCELAR</button>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="pills-live"><button type="button"
+                                        class="btn btn-danger w-100 btn-sm" id="btnLive" onclick="toggleLive()">LIGAR
+                                        CÂMERA</button></div>
+                            </div>
+                        </form>
+                        <div class="mt-3 p-2 bg-light border rounded small text-muted text-center" id="statusBox">
+                            Pronto.</div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div id="upload-area"
-            class="bg-white rounded-xl shadow-md p-8 text-center border-2 border-dashed border-slate-300 hover:border-blue-500 transition">
-
-            <input type="file" id="camera-input" class="hidden" accept="image/*" multiple capture="environment">
-            <input type="file" id="gallery-input" class="hidden" accept="image/*" multiple>
-
-            <div id="upload-ui">
-                <i class="fa-solid fa-cloud-arrow-up text-4xl text-blue-500 mb-4"></i>
-                <h3 class="text-xl font-medium text-slate-700">Selecione suas fotos</h3>
-                <p class="text-sm text-slate-400 mb-6">Detecta Buracos e Bueiros simultaneamente</p>
-
-                <div class="flex justify-center space-x-4">
-                    <button onclick="document.getElementById('camera-input').click()"
-                        class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 shadow-lg">
-                        <i class="fa-solid fa-camera mr-2"></i> Abrir Câmera
-                    </button>
-                    <button onclick="document.getElementById('gallery-input').click()"
-                        class="bg-slate-300 text-slate-800 px-6 py-3 rounded-lg hover:bg-slate-400 shadow-lg">
-                        <i class="fa-solid fa-images mr-2"></i> Galeria/Arquivos
-                    </button>
+            <div class="col-lg-9 col-md-8" id="mainContentCol">
+                <div class="card-panel p-0 bg-transparent border-0 shadow-none">
+                    <div class="preview-container">
+                        <img id="videoDisplay" src="" style="display:none;"><video id="webcam" autoplay playsinline
+                            style="display:none;"></video>
+                        <div id="placeholder" class="text-center"><i class="fas fa-video fa-3x mb-3"
+                                style="color:#475569; opacity:0.5;"></i>
+                            <p class="text-muted small">Aguardando entrada de vídeo</p>
+                        </div>
+                    </div>
+                    <div class="progress mt-3" style="height: 6px;">
+                        <div class="progress-bar" id="progressBar" style="width: 0%;"></div>
+                    </div>
+                    <div id="downloadArea" class="text-center mt-3" style="display:none;"><a id="downloadLink" href="#"
+                            class="btn btn-success shadow-sm"><i class="fas fa-download me-2"></i> Baixar Vídeo
+                            Processado</a></div>
+                </div>
+                <div class="card-panel mt-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5><i class="fas fa-images me-2"></i> Registro de Ocorrências</h5><button
+                            class="btn btn-sm btn-outline-secondary" onclick="limparGaleria()"><i
+                                class="fas fa-trash me-1"></i> Limpar</button>
+                    </div>
+                    <div id="galeria-objetos"></div>
                 </div>
             </div>
-            <div id="loading" class="hidden mt-4">
-                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto"></div>
-                <p class="mt-2 text-blue-600">Processando Inteligência Artificial...</p>
-                <p id="loading-detail" class="text-xs text-slate-500 mt-1"></p>
-            </div>
         </div>
-
-        <div id="report-area" class="mt-8 hidden animate-fade-in">
-            <div
-                class="bg-blue-900 text-white p-4 rounded-xl shadow-lg flex flex-wrap justify-between items-center mb-6 gap-4">
-                <div>
-                    <p class="text-xs uppercase opacity-70">Total CBUQ (Estimado)</p>
-                    <p class="text-2xl font-bold text-yellow-400" id="total-ton">0.000 t</p>
-                </div>
-                <div>
-                    <p class="text-xs uppercase opacity-70">Área Danificada</p>
-                    <p class="text-xl font-bold" id="total-m2">0.00 m²</p>
-                </div>
-                <div>
-                    <p class="text-xs uppercase opacity-70">Ocorrências</p>
-                    <p class="text-xl font-bold" id="total-count">0</p>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="printReport()"
-                        class="bg-white text-blue-900 px-4 py-2 rounded font-bold hover:bg-gray-100">
-                        <i class="fa-solid fa-print"></i>
-                    </button>
-                    <button onclick="resetApp()"
-                        class="bg-red-600 text-white px-4 py-2 rounded font-bold hover:bg-red-700">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-
-            <div id="results-grid" class="result-grid"></div>
-        </div>
-
-    </main>
-
-    <div id="modal" class="fixed inset-0 bg-black/90 hidden items-center justify-center z-50 p-4"
-        onclick="this.classList.add('hidden')">
-        <img id="modal-img" class="max-h-screen max-w-full rounded shadow-2xl">
     </div>
 
     <script>
-        const confBuraco = document.getElementById('conf-buraco');
-        const confBueiro = document.getElementById('conf-bueiro');
-        const resolutionSelect = document.getElementById('resolution-select');
-        const modeSelect = document.getElementById('mode-select');
-        const pixelToCm2 = document.getElementById('pixel-to-cm2');
-        const calculateMeasures = document.getElementById('calculate-measures');
-        const measureDisplaySelect = document.getElementById('measure-display-select');
-        const measureDisplayGroup = document.getElementById('measure-display-group');
+        let ws = null, isLive = false, abortController = null, thumbnailsData = [], currentModalIndex = 0;
+        const inputs = document.querySelectorAll('.inputs-config');
 
-        // NOVOS INPUTS
-        const cameraInput = document.getElementById('camera-input');
-        const galleryInput = document.getElementById('gallery-input');
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebarCol'), main = document.getElementById('mainContentCol');
+            if (sidebar.classList.contains('sidebar-hidden')) {
+                sidebar.classList.remove('sidebar-hidden'); sidebar.classList.add('col-lg-3', 'col-md-4');
+                main.classList.remove('col-12'); main.classList.add('col-lg-9', 'col-md-8');
+                localStorage.setItem('sidebarState', 'visible');
+            } else {
+                sidebar.classList.add('sidebar-hidden'); sidebar.classList.remove('col-lg-3', 'col-md-4');
+                main.classList.remove('col-lg-9', 'col-md-8'); main.classList.add('col-12');
+                localStorage.setItem('sidebarState', 'hidden');
+            }
+        }
 
-        const loadingDetail = document.getElementById('loading-detail'); // Elemento para feedback de carregamento
+        function toggleSizeInput() {
+            const isChecked = document.getElementById('filterSize').checked;
+            document.getElementById('sizeInputArea').style.display = isChecked ? 'block' : 'none';
+        }
 
-        // Elementos do slide
-        const configContent = document.getElementById('config-content');
-        const configIcon = document.getElementById('config-icon');
-
-        let currentFiles = [];
-        let lastData = null;
-
-        const CONFIG_KEY = 'conservapp_config';
-        const DEFAULT_CONFIG = {
-            confBuraco: 0.25,
-            confBueiro: 0.30,
-            resolution: 736,
-            mode: 'box',
-            pixelToCm2: 0.04,
-            measures: true,
-            displayMode: 'both',
-            isExpanded: false
+        window.onload = () => {
+            inputs.forEach(input => {
+                const saved = localStorage.getItem(input.id);
+                if (saved !== null) { if (input.type === 'checkbox') input.checked = (saved === 'true'); else input.value = saved; }
+                if (input.id === 'confBuraco') document.getElementById('confBuracoVal').innerText = Math.round(input.value * 100) + '%';
+                if (input.id === 'confBueiro') document.getElementById('confBueiroVal').innerText = Math.round(input.value * 100) + '%';
+            });
+            if (localStorage.getItem('sidebarState') === 'hidden') toggleSidebar();
+            toggleSizeInput(); // Init state
         };
 
-        // --- FUNÇÃO DE COMPRESSÃO DE IMAGEM ---
-        function compressFile(file, maxWidth = 2048, quality = 0.7) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = event => {
-                    const img = new Image();
-                    img.src = event.target.result;
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        let width = img.width;
-                        let height = img.height;
-
-                        // Redimensiona se a largura for maior que o máximo
-                        if (width > maxWidth) {
-                            height = Math.round(height * (maxWidth / width));
-                            width = maxWidth;
-                        }
-
-                        canvas.width = width;
-                        canvas.height = height;
-
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-
-                        // Converte para Blob JPG (com compressão)
-                        canvas.toBlob(blob => {
-                            // Cria um novo objeto File a partir do Blob
-                            const newFile = new File([blob], file.name, {
-                                type: 'image/jpeg',
-                                lastModified: Date.now()
-                            });
-                            resolve(newFile);
-                        }, 'image/jpeg', quality);
-                    };
-                    img.onerror = error => reject(error);
-                };
-                reader.onerror = error => reject(error);
+        inputs.forEach(input => {
+            input.addEventListener('input', () => {
+                localStorage.setItem(input.id, input.type === 'checkbox' ? input.checked : input.value);
+                if (input.id === 'confBuraco') document.getElementById('confBuracoVal').innerText = Math.round(input.value * 100) + '%';
+                if (input.id === 'confBueiro') document.getElementById('confBueiroVal').innerText = Math.round(input.value * 100) + '%';
+                if (isLive && ws && ws.readyState === WebSocket.OPEN) enviarConfigWs();
             });
-        }
-
-        // --- FUNÇÃO CENTRAL QUE CHAMA A COMPRESSÃO ---
-        async function compressAndSendFiles(files) {
-            currentFiles = files;
-            document.getElementById('upload-ui').classList.add('hidden');
-            document.getElementById('report-area').classList.add('hidden');
-            document.getElementById('loading').classList.remove('hidden');
-            loadingDetail.textContent = `Preparando ${files.length} arquivos...`;
-
-            const compressedFiles = [];
-
-            // Loop para processar cada arquivo sequencialmente
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                loadingDetail.textContent = `Comprimindo imagem ${i + 1} de ${files.length}... (${file.name})`;
-                try {
-                    // Usaremos 1024px como um limite seguro para a maioria dos dispositivos/redes.
-                    const compressedFile = await compressFile(file, 1024, 0.7);
-                    compressedFiles.push(compressedFile);
-                } catch (e) {
-                    console.error("Erro ao comprimir o arquivo:", e);
-                    alert(`Erro ao processar a imagem ${file.name}. Tentando enviar original.`);
-                    compressedFiles.push(file); // Tenta enviar o original se a compressão falhar
-                }
-            }
-
-            loadingDetail.textContent = `Enviando arquivos...`;
-            await sendDetectionRequest(compressedFiles);
-        }
-
-        async function sendDetectionRequest(filesToSend) {
-            const fd = new FormData();
-            fd.append('confidence_buraco', confBuraco.value);
-            fd.append('confidence_bueiro', confBueiro.value);
-            fd.append('detection_mode', modeSelect.value);
-            fd.append('resolution_ia', resolutionSelect.value);
-            fd.append('pixel_to_cm2', pixelToCm2.value);
-            fd.append('calculate_measures', calculateMeasures.checked ? 'true' : 'false');
-            fd.append('measure_display_mode', measureDisplaySelect.value);
-
-            for (let f of filesToSend) fd.append('files', f);
-
-            try {
-                const req = await fetch('/detector/detectar', { method: 'POST', body: fd });
-
-                if (req.ok) {
-                    const res = await req.json();
-                    renderResults(res);
-                } else {
-                    const err = await req.json().catch(() => ({}));
-                    alert('Erro no servidor: ' + (err.message || req.statusText));
-                    resetApp();
-                }
-            } catch (e) {
-                console.error(e);
-                alert('Erro de conexão ou endpoint não encontrado (/detector/detectar).');
-                resetApp();
-            } finally {
-                loadingDetail.textContent = ''; // Limpa o detalhe do loading
-            }
-        }
-
-        // --- FUNÇÕES DE CONFIGURAÇÃO E UI ---
-
-        function toggleConfigs() {
-            const isExpanded = configContent.classList.toggle('slide-content-hidden');
-            configContent.classList.toggle('slide-content-visible');
-            configIcon.classList.toggle('fa-angle-right');
-            configIcon.classList.toggle('fa-angle-down');
-
-            saveConfig(isExpanded);
-        }
-
-        function saveConfig(isExpanded) {
-            const config = {
-                confBuraco: parseFloat(confBuraco.value),
-                confBueiro: parseFloat(confBueiro.value),
-                resolution: parseInt(resolutionSelect.value),
-                mode: modeSelect.value,
-                pixelToCm2: parseFloat(pixelToCm2.value),
-                measures: calculateMeasures.checked,
-                displayMode: measureDisplaySelect.value,
-                isExpanded: isExpanded === undefined ? !configContent.classList.contains('slide-content-hidden') : isExpanded
-            };
-            localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
-        }
-
-        function loadConfig() {
-            const saved = localStorage.getItem(CONFIG_KEY);
-            const config = saved ? JSON.parse(saved) : DEFAULT_CONFIG;
-
-            confBuraco.value = config.confBuraco;
-            confBueiro.value = config.confBueiro;
-            resolutionSelect.value = config.resolution;
-            modeSelect.value = config.mode;
-            pixelToCm2.value = config.pixelToCm2;
-            calculateMeasures.checked = config.measures;
-            measureDisplaySelect.value = config.displayMode;
-
-            config.isExpanded = false; // FORÇA MINIMIZADO
-
-            if (config.isExpanded) {
-                configContent.classList.remove('slide-content-hidden');
-                configContent.classList.add('slide-content-visible');
-                configIcon.classList.add('fa-angle-down');
-                configIcon.classList.remove('fa-angle-right');
-            } else {
-                configContent.classList.add('slide-content-hidden');
-                configContent.classList.remove('slide-content-visible');
-                configIcon.classList.add('fa-angle-right');
-                configIcon.classList.remove('fa-angle-down');
-            }
-
-            updateLabels();
-        }
-
-        function resetConfigs() {
-            const currentState = !configContent.classList.contains('slide-content-hidden');
-            const defaultPixelToCm2 = document.getElementById('pixel-to-cm2').getAttribute('data-default');
-
-            localStorage.removeItem(CONFIG_KEY);
-            loadConfig();
-
-            pixelToCm2.value = defaultPixelToCm2;
-
-            saveConfig(currentState);
-
-            if (currentFiles.length) compressAndSendFiles(currentFiles);
-            alert('Configurações redefinidas para o padrão.');
-        }
-
-        function updateLabels() {
-            document.getElementById('val-buraco').textContent = parseFloat(confBuraco.value).toFixed(2);
-            document.getElementById('val-bueiro').textContent = parseFloat(confBueiro.value).toFixed(2);
-
-            const measuresEnabled = calculateMeasures.checked;
-
-            const displayStyle = measuresEnabled ? 'block' : 'none';
-            const totalTonElement = document.getElementById('total-ton');
-            const totalM2Element = document.getElementById('total-m2');
-
-            measureDisplayGroup.style.display = measuresEnabled ? 'block' : 'none';
-            pixelToCm2.closest('div').style.display = measuresEnabled ? 'block' : 'none';
-
-
-            if (totalTonElement) totalTonElement.closest('div').style.display = displayStyle;
-            if (totalM2Element) totalM2Element.closest('div').style.display = displayStyle;
-        }
-
-        // --- MANUSEIO DE EVENTOS ---
-        loadConfig();
-
-        [resolutionSelect, modeSelect, calculateMeasures, measureDisplaySelect, pixelToCm2].forEach(el => {
-            el.onchange = () => {
-                updateLabels();
-                saveConfig();
-                if (currentFiles.length) compressAndSendFiles(currentFiles); // Reprocessa com os novos settings
-            };
         });
 
-        confBuraco.oninput = () => { updateLabels(); saveConfig(); };
-        confBueiro.oninput = () => { updateLabels(); saveConfig(); };
-        pixelToCm2.oninput = () => { updateLabels(); saveConfig(); };
-
-
-        // Chama a nova função compressAndSendFiles ao selecionar arquivos (NOVA LÓGICA)
-        cameraInput.onchange = (e) => {
-            if (e.target.files.length) compressAndSendFiles(e.target.files);
-        };
-        galleryInput.onchange = (e) => {
-            if (e.target.files.length) compressAndSendFiles(e.target.files);
-        };
-
-        // --- FUNÇÕES DE RESULTADOS E RESET ---
-
-        function renderResults(data) {
-            lastData = data;
-            document.getElementById('loading').classList.add('hidden');
-            document.getElementById('report-area').classList.remove('hidden');
-
-            const measuresEnabled = calculateMeasures.checked;
-
-            // Atualiza Totais
-            document.getElementById('total-ton').textContent = data.grand_totals.ton + ' t';
-            document.getElementById('total-m2').textContent = data.grand_totals.m2 + ' m²';
-            document.getElementById('total-count').textContent = data.grand_totals.count;
-
-            // Esconde colunas de total se medidas estiverem desativadas
-            document.getElementById('total-ton').closest('div').style.display = measuresEnabled ? 'block' : 'none';
-            document.getElementById('total-m2').closest('div').style.display = measuresEnabled ? 'block' : 'none';
-
-
-            const grid = document.getElementById('results-grid');
-            grid.innerHTML = '';
-
-            // Define o cabeçalho da tabela de resultados
-            const extraHeader = measuresEnabled ? '<th class="text-right">Extra</th>' : '';
-
-            data.batch_results.forEach((item, idx) => {
-                // Monta linhas da tabela interna do card
-                let rows = item.report_data.map(d => {
-                    const extraData = measuresEnabled ? `<td class="p-1 text-right text-xs text-gray-400">${d.extra !== '-' ? d.extra : d.conf}</td>` : '';
-                    return `
-                    <tr class="border-b text-sm">
-                        <td class="p-1 font-bold text-gray-600">${d.id}</td>
-                        <td class="p-1">${d.tipo}</td>
-                        <td class="p-1 font-mono text-blue-700 font-bold">${d.detalhe}</td>
-                        ${extraData}
-                    </tr>
-                `}).join('');
-
-                if (!rows) rows = measuresEnabled
-                    ? '<tr><td colspan="4" class="p-4 text-center text-gray-400 text-xs">Nada detectado</td></tr>'
-                    : '<tr><td colspan="3" class="p-4 text-center text-gray-400 text-xs">Nada detectado</td></tr>';
-
-
-                grid.innerHTML += `
-                    <div class="result-card">
-                        <div class="p-2 bg-gray-50 border-b text-xs font-bold text-gray-500 truncate">${item.file_name}</div>
-                        <div class="relative h-48 bg-gray-200 cursor-pointer group p-1" onclick="showModal('data:image/jpeg;base64,${item.image_b64}')">
-                            <img src="data:image/jpeg;base64,${item.image_b64}" class="w-full h-full object-contain">
-                            <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition flex items-center justify-center">
-                                <span class="bg-black/50 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100">Ampliar</span>
-                            </div>
-                        </div>
-                        <div class="p-3">
-                            <table class="w-full text-left">
-                                <thead class="text-xs text-gray-400 uppercase">
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Tipo</th>
-                                        <th>Info</th>
-                                        ${extraHeader}
-                                    </tr>
-                                </thead>
-                                <tbody>${rows}</tbody>
-                            </table>
-                        </div>
-                    </div>
-                `;
-            });
+        function getConfigs() {
+            return {
+                conf_buraco: parseFloat(document.getElementById('confBuraco').value),
+                conf_bueiro: parseFloat(document.getElementById('confBueiro').value),
+                resolution_ia: parseInt(document.getElementById('resolutionIA').value),
+                pixel_to_cm2: parseFloat(document.getElementById('pixelCm').value),
+                calculate_measures: document.getElementById('calcMeasures').checked,
+                show_trigger_line: document.getElementById('showLine').checked,
+                show_id: document.getElementById('showId').checked,
+                show_type: document.getElementById('showType').checked,
+                show_conf: document.getElementById('showConf').checked,
+                show_dim: document.getElementById('showDim').checked,
+                show_area: document.getElementById('showArea').checked,
+                filter_by_size: document.getElementById('filterSize').checked,
+                target_size: parseFloat(document.getElementById('targetSize').value)
+            };
         }
 
-        function showModal(src) {
-            document.getElementById('modal-img').src = src;
-            document.getElementById('modal').classList.remove('hidden');
-            document.getElementById('modal').classList.add('flex');
+        function enviarConfigWs() {
+            const cfg = getConfigs();
+            ws.send(JSON.stringify({
+                type: 'config', data: {
+                    conf_buraco: cfg.conf_buraco, conf_bueiro: cfg.conf_bueiro, resolution: cfg.resolution_ia,
+                    pixel_cm2: cfg.pixel_to_cm2, measures: cfg.calculate_measures, show_line: cfg.show_trigger_line,
+                    show_id: cfg.show_id, show_type: cfg.show_type, show_conf: cfg.show_conf, show_dim: cfg.show_dim, show_area: cfg.show_area,
+                    filter_size: cfg.filter_by_size, target_size: cfg.target_size
+                }
+            }));
         }
 
-        function resetApp() {
-            currentFiles = [];
-            document.getElementById('report-area').classList.add('hidden');
-            document.getElementById('loading').classList.add('hidden');
-            document.getElementById('upload-ui').classList.remove('hidden');
-            // Nota: Não é necessário limpar o fileInput, pois os novos inputs serão
-            // preenchidos com os arquivos mais recentes na próxima seleção.
-            // Limpar faria sentido se fosse um único input reusado.
-            loadingDetail.textContent = '';
+        function adicionarThumbnail(thumb) {
+            thumbnailsData.unshift(thumb);
+            const div = document.createElement('div'); div.className = 'thumb-card'; div.onclick = () => abrirModalPorObjeto(thumb);
+            div.innerHTML = `<img src="data:image/jpeg;base64,${thumb.image}"><div class="thumb-info"><div class="thumb-id">#${thumb.id}</div><div class="thumb-label" style="color:${thumb.label === 'BURACO' ? 'var(--accent-red)' : 'var(--primary-color)'}">${thumb.label}</div></div>`;
+            document.getElementById('galeria-objetos').prepend(div);
+        }
+        function limparGaleria() { document.getElementById('galeria-objetos').innerHTML = ''; thumbnailsData = []; }
+        function abrirModalPorObjeto(thumbObj) { currentModalIndex = thumbnailsData.findIndex(t => t.id === thumbObj.id); atualizarModal(); document.getElementById("imageModal").style.display = "block"; }
+        function fecharModal() { document.getElementById("imageModal").style.display = "none"; }
+        function mudarSlide(d) { currentModalIndex += d; if (currentModalIndex < 0) currentModalIndex = thumbnailsData.length - 1; if (currentModalIndex >= thumbnailsData.length) currentModalIndex = 0; atualizarModal(); }
+        function atualizarModal() { if (thumbnailsData.length === 0) return; const item = thumbnailsData[currentModalIndex]; document.getElementById("img01").src = "data:image/jpeg;base64," + item.image; document.getElementById("caption").innerHTML = `<span style="color:var(--primary-color)">#${item.id}</span> ${item.label}`; }
+        document.addEventListener('keydown', e => { if (document.getElementById("imageModal").style.display === "block") { if (e.key === "ArrowLeft") mudarSlide(-1); if (e.key === "ArrowRight") mudarSlide(1); if (e.key === "Escape") fecharModal(); } });
+
+        async function processarVideo() {
+            const fileInput = document.getElementById('videoInput');
+            if (!fileInput.files[0]) return alert("Selecione um vídeo!");
+            limparGaleria();
+            const statusBox = document.getElementById('statusBox'); statusBox.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Carregando...';
+            document.getElementById('downloadArea').style.display = 'none'; document.getElementById('btnProcessar').style.display = 'none'; document.getElementById('btnCancelar').style.display = 'block';
+            document.getElementById('placeholder').style.display = 'none'; document.getElementById('videoDisplay').style.display = 'block';
+
+            const cfg = getConfigs();
+            const formData = new FormData(); formData.append("video", fileInput.files[0]);
+            for (const key in cfg) formData.append(key, cfg[key]);
+            abortController = new AbortController();
+
+            try {
+                const response = await fetch("/detectar_video", { method: "POST", body: formData, signal: abortController.signal });
+                const reader = response.body.getReader(); const decoder = new TextDecoder(); let buffer = "";
+                while (true) {
+                    const { done, value } = await reader.read(); if (done) break;
+                    buffer += decoder.decode(value, { stream: true }); const lines = buffer.split("\n"); buffer = lines.pop();
+                    for (const line of lines) {
+                        if (!line.trim()) continue;
+                        try {
+                            const data = JSON.parse(line);
+                            if (data.status === "processing") {
+                                if (data.preview) document.getElementById('videoDisplay').src = "data:image/jpeg;base64," + data.preview;
+                                const pct = Math.round((data.current / data.total) * 100);
+                                document.getElementById('progressBar').style.width = pct + "%";
+                                statusBox.innerHTML = `<span class="text-primary fw-bold">${pct}%</span> &bull; ${data.objs} Ocorrências`;
+                                if (data.thumbnails) data.thumbnails.forEach(t => adicionarThumbnail(t));
+                            } else if (data.status === "complete") { finalizar(true, data); } else if (data.status === "error") { alert(data.message); finalizar(false); }
+                        } catch (e) { }
+                    }
+                }
+            } catch (err) { if (err.name !== 'AbortError') alert("Erro de conexão."); finalizar(false); }
         }
 
-        function printReport() {
-            if (!lastData) return;
-            const w = window.open('', '_blank');
-            const d = new Date().toLocaleString('pt-BR');
-            const measuresEnabled = calculateMeasures.checked;
+        function cancelarProcessamento() { if (abortController) { abortController.abort(); abortController = null; } finalizar(false); }
+        function finalizar(sucesso, data = null) {
+            document.getElementById('btnProcessar').style.display = 'block'; document.getElementById('btnCancelar').style.display = 'none';
+            const statusBox = document.getElementById('statusBox');
+            if (sucesso && data) {
+                statusBox.innerHTML = `<i class="fas fa-check-circle text-success"></i> Pronto (${data.elapsed_time})`;
+                const blob = b64toBlob(data.video_b64, 'video/mp4'); const url = URL.createObjectURL(blob);
+                const link = document.getElementById('downloadLink'); link.href = url; link.download = "auditoria_" + data.file_name;
+                document.getElementById('downloadArea').style.display = 'block';
+            } else { statusBox.innerHTML = "Aguardando..."; }
+        }
 
-            const totalsDiv = measuresEnabled ? `
-                <div class="totals">
-                    TOTAL GERAL: ${lastData.grand_totals.count} Ocorrências |
-                    Área: ${lastData.grand_totals.m2} m² |
-                    Massa CBUQ: ${lastData.grand_totals.ton} t
-                </div>
-            ` : `
-                <div class="totals">
-                    TOTAL GERAL: ${lastData.grand_totals.count} Ocorrências
-                </div>
-            `;
-
-            const tableHeaders = measuresEnabled
-                ? '<tr><th>Tipo</th><th>Detalhe</th><th>Extra</th></tr>'
-                : '<tr><th>Tipo</th><th>Detalhe</th></tr>';
-
-            // HTML Gerado para Impressão
-            let html = `
-                <html><head><title>Relatório</title>
-                <style>
-                    body { font-family: sans-serif; padding: 20px; }
-                    .header { border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; }
-                    .card { border: 1px solid #ddd; margin-bottom: 20px; page-break-inside: avoid; display: flex; }
-                    .img-box { width: 40%; }
-                    .img-box img { width: 100%; height: auto; display: block; }
-                    .info-box { width: 60%; padding: 10px; }
-                    table { width: 100%; border-collapse: collapse; font-size: 12px; }
-                    th, td { border-bottom: 1px solid #eee; padding: 4px; text-align: left; }
-                    th { background: #f9f9f9; }
-                    .totals { background: #eef2ff; padding: 10px; border: 1px solid #c7d2fe; margin-bottom: 20px; font-weight: bold; font-size: 14px; }
-                </style>
-                </head><body>
-                <div class="header">
-                    <h1>Relatório de Vistoria</h1>
-                    <span>${d}</span>
-                </div>
-                ${totalsDiv}
-            `;
-
-            lastData.batch_results.forEach(item => {
-                let trs = item.report_data.map(x => {
-                    return measuresEnabled
-                        ? `<tr><td>${x.tipo}</td><td>${x.detalhe}</td><td>${x.extra}</td></tr>`
-                        : `<tr><td>${x.tipo}</td><td>${x.detalhe}</td></tr>`;
-                }).join('');
-
-                const colspan = measuresEnabled ? 3 : 2;
-
-                html += `
-                    <div class="card">
-                        <div class="img-box"><img src="data:image/jpeg;base64,${item.image_b64}"></div>
-                        <div class="info-box">
-                            <strong>${item.file_name}</strong>
-                            <br><br>
-                            <table>
-                                ${tableHeaders}
-                                ${trs || `<tr><td colspan="${colspan}">Nada detectado</td></tr>`}
-                            </table>
-                        </div>
-                    </div>
-                `;
-            });
-
-            html += '</body></html>';
-            w.document.write(html);
-            w.document.close();
-            setTimeout(() => w.print(), 500);
+        function toggleLive() { if (isLive) stopLive(); else startLive(); }
+        async function startLive() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                const videoEl = document.getElementById('webcam'); videoEl.srcObject = stream;
+                document.getElementById('placeholder').style.display = 'none'; document.getElementById('videoDisplay').style.display = 'block';
+                isLive = true; const btn = document.getElementById('btnLive'); btn.innerHTML = '<i class="fas fa-stop me-2"></i> PARAR'; btn.className = 'btn btn-secondary w-100 btn-sm';
+                limparGaleria();
+                const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'; ws = new WebSocket(`${proto}//${window.location.host}/ws`);
+                ws.onopen = () => { document.getElementById('statusBox').innerHTML = '<i class="fas fa-circle text-danger fa-fade me-1"></i> AO VIVO'; enviarConfigWs(); sendFrameLoop(); };
+                ws.onmessage = (e) => { const data = JSON.parse(e.data); if (data.image) document.getElementById('videoDisplay').src = "data:image/jpeg;base64," + data.image; if (data.thumbnails) data.thumbnails.forEach(t => adicionarThumbnail(t)); };
+            } catch (e) { alert("Câmera inacessível"); }
+        }
+        function stopLive() {
+            isLive = false; if (ws) ws.close();
+            const vid = document.getElementById('webcam'); if (vid.srcObject) vid.srcObject.getTracks().forEach(t => t.stop()); vid.srcObject = null;
+            const btn = document.getElementById('btnLive'); btn.innerHTML = 'LIGAR CÂMERA'; btn.className = 'btn btn-danger w-100 btn-sm';
+            document.getElementById('statusBox').innerText = "Parado.";
+        }
+        function sendFrameLoop() {
+            if (!isLive || !ws || ws.readyState !== WebSocket.OPEN) return;
+            const vid = document.getElementById('webcam'); const cvs = document.createElement('canvas'); cvs.width = vid.videoWidth; cvs.height = vid.videoHeight;
+            if (cvs.width > 0) { cvs.getContext('2d').drawImage(vid, 0, 0); ws.send(JSON.stringify({ type: 'frame', data: cvs.toDataURL('image/jpeg', 0.5).split(',')[1] })); }
+            setTimeout(sendFrameLoop, 66);
+        }
+        function b64toBlob(b64Data, contentType = '', sliceSize = 512) {
+            const byteCharacters = atob(b64Data); const byteArrays = [];
+            for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+                const slice = byteCharacters.slice(offset, offset + sliceSize); const byteNumbers = new Array(slice.length);
+                for (let i = 0; i < slice.length; i++) byteNumbers[i] = slice.charCodeAt(i);
+                byteArrays.push(new Uint8Array(byteNumbers));
+            } return new Blob(byteArrays, { type: contentType });
         }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
