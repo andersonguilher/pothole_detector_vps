@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Câmera Veicular IA</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* --- VISUAL PROFISSIONAL (APP LIKE) --- */
+        body {
+            margin: 0;
+            background-color: #000;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            /* Fallback */
+            height: 100dvh;
+            /* Altura dinâmica real para mobile */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Área do Vídeo */
+        #video-container {
+            position: relative;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #111;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        /* Imagem de Retorno (O que o servidor devolve) */
+        #processed-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: none;
+            /* Só aparece quando conectado */
+        }
+
+        /* Câmera Local (Escondida, usada só para envio) */
+        #webcam {
+            display: none;
+        }
+
+        /* HUD (Status no topo) */
+        .hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .badge {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            border: 1px solid #444;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            backdrop-filter: blur(4px);
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #666;
+            transition: 0.3s;
+        }
+
+        .active .dot {
+            background: #00ff00;
+            box-shadow: 0 0 8px #00ff00;
+        }
+
+        .error .dot {
+            background: #ff0000;
+        }
+
+        /* Barra de Controles (Fundo) */
+        .controls {
+            height: 100px;
+            flex-shrink: 0;
+            background: #111;
+            border-top: 1px solid #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding-bottom: env(safe-area-inset-bottom, 10px);
+            z-index: 100;
+        }
+
+        /* Botões Redondos Grandes */
+        .btn-round {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: none;
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            transition: transform 0.1s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-round:active {
+            transform: scale(0.90);
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            width: 80px;
+            height: 80px;
+            /* Destaque */
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: white;
+            display: none;
+            /* Oculto inicialmente */
+        }
+
+        /* Tela de Espera */
+        #placeholder {
+            text-align: center;
+            color: #555;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #placeholder i {
+            margin-bottom: 20px;
+            font-size: 3rem;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="video-container">
+        <video id="webcam" autoplay playsinline muted></video>
+        <img id="processed-image" alt="Transmissão">
+
+        <div id="placeholder">
+            <i class="fas fa-video-slash"></i>
+            <div>Sistema Parado</div>
+        </div>
+
+        <div class="hud">
+            <div class="badge" id="status-badge">
+                <div class="dot"></div> <span id="status-text">OFFLINE</span>
+            </div>
+            <div class="badge">
+                <i class="fas fa-wifi"></i> <span id="ping">-- ms</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn-round btn-start" id="btnStart" onclick="startSystem()">
+            <i class="fas fa-play"></i>
+        </button>
+
+        <button class="btn-round btn-stop" id="btnStop" onclick="stopSystem()">
+            <i class="fas fa-stop"></i>
+        </button>
+    </div>
+
+    <script>
+        let ws = null, stream = null, isRunning = false, wakeLock = null;
+        let lastPing = 0;
+
+        // Configurações do modelo
+        const config = {
+            conf_buraco: 0.30, conf_bueiro: 0.35,
+            resolution: 640, pixel_cm2: 0.04,
+            measures: true, show_id: true, show_conf: true
+        };
+
+        async function startSystem() {
+            // 1. Manter tela ligada
+            if ('wakeLock' in navigator) {
+                try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) { }
+            }
+
+            // 2. Verificar Câmera
+            if (!navigator.mediaDevices) {
+                alert("Erro: Navegador não suporta acesso à mídia.");
+                return;
+            }
+
+            try {
+                // Tenta câmera traseira (environment)
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } }
+                });
+
+                const vid = document.getElementById('webcam');
+                vid.srcObject = stream;
+                await vid.play(); // Garante que começou a rodar
+
+            } catch (e) {
+                alert("Erro ao abrir câmera: " + e.message);
+                return;
+            }
+
+            // 3. Atualizar UI
+            document.getElementById('placeholder').style.display = 'none';
+            document.getElementById('processed-image').style.display = 'block';
+            document.getElementById('btnStart').style.display = 'none';
+            document.getElementById('btnStop').style.display = 'flex';
+
+            // 4. Conectar WebSocket
+            connectWS();
+            isRunning = true;
+        }
+
+        function stopSystem() {
+            isRunning = false;
+
+            // Fecha conexões
+            if (ws) ws.close();
+            if (stream) stream.getTracks().forEach(t => t.stop());
+            if (wakeLock) wakeLock.release();
+
+            // Reseta UI
+            document.getElementById('placeholder').style.display = 'flex';
+            document.getElementById('processed-image').style.display = 'none';
+            document.getElementById('btnStart').style.display = 'flex';
+            document.getElementById('btnStop').style.display = 'none';
+            document.getElementById('processed-image').src = "";
+
+            updateStatus(false, "Parado");
+        }
+
+        function connectWS() {
+            const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+
+            // --- CORREÇÃO DE ROTA (Compatível com Cloudflare/Nginx) ---
+            let path = window.location.pathname.replace('live', '').replace('mobile', '');
+            if (!path.endsWith('/')) path += '/';
+            const url = `${proto}//${window.location.host}${path}ws`;
+
+            console.log("Conectando em:", url);
+            ws = new WebSocket(url);
+
+            ws.onopen = () => {
+                updateStatus(true, "Ao Vivo");
+                // Envia configs
+                ws.send(JSON.stringify({ type: 'config', data: config }));
+                sendLoop();
+            };
+
+            ws.onmessage = (e) => {
+                const data = JSON.parse(e.data);
+                if (data.image) {
+                    document.getElementById('processed-image').src = "data:image/jpeg;base64," + data.image;
+                    const ping = Date.now() - lastPing;
+                    document.getElementById('ping').innerText = ping + " ms";
+                }
+            };
+
+            ws.onclose = () => {
+                if (isRunning) {
+                    updateStatus(false, "Reconectando...");
+                    setTimeout(connectWS, 2000);
+                }
+            };
+
+            ws.onerror = (e) => console.error("Erro WS:", e);
+        }
+
+        function sendLoop() {
+            if (!isRunning || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+            const vid = document.getElementById('webcam');
+
+            if (vid.videoWidth > 0) {
+                const cvs = document.createElement('canvas');
+                // Reduz resolução para economizar banda no Cloudflare Tunnel
+                // 480p é um bom balanço entre qualidade e velocidade
+                const width = 480;
+                const height = vid.videoHeight * (width / vid.videoWidth);
+
+                cvs.width = width;
+                cvs.height = height;
+
+                const ctx = cvs.getContext('2d');
+                ctx.drawImage(vid, 0, 0, width, height);
+
+                // Qualidade 0.5 (JPEG)
+                const b64 = cvs.toDataURL('image/jpeg', 0.5).split(',')[1];
+
+                lastPing = Date.now();
+
+                try {
+                    ws.send(JSON.stringify({ type: 'frame', data: b64 }));
+                } catch (e) {
+                    console.error("Falha no envio:", e);
+                }
+            }
+
+            // Limita a 10 FPS (100ms) para não derrubar o tunnel
+            setTimeout(sendLoop, 100);
+        }
+
+        function updateStatus(active, text) {
+            const badge = document.getElementById('status-badge');
+            const txt = document.getElementById('status-text');
+            txt.innerText = text;
+            if (active) {
+                badge.classList.add('active'); badge.classList.remove('error');
+            } else {
+                badge.classList.remove('active'); badge.classList.add('error');
+            }
+        }
+    </script>
+</body>
+
+</html>

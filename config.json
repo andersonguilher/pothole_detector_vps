@@ -1,0 +1,17 @@
+{
+    "conf_buraco": 0.3,
+    "conf_bueiro": 0.35,
+    "mode": "box",
+    "resolution": 640,
+    "pixel_cm2": 0.04,
+    "measures": true,
+    "show_id": true,
+    "show_type": false,
+    "show_conf": true,
+    "show_dim": false,
+    "show_area": false,
+    "filter_size": false,
+    "target_size": null,
+    "show_line": false,
+    "rotation": 270
+}

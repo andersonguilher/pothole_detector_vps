@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sala de Controle - Auditoria Viária</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #e2e8f0;
+            font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Cabeçalho */
+        .header {
+            height: 60px;
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            justify-content: space-between;
+        }
+
+        .brand {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #38bdf8;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Layout */
+        .main-layout {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+
+        .video-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+            position: relative;
+            border-right: 1px solid #334155;
+        }
+
+        #live-feed {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .overlay-status {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid #475569;
+            backdrop-filter: blur(4px);
+        }
+
+        /* Lateral */
+        .side-panel {
+            width: 420px;
+            background: #1e293b;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-tabs .nav-link {
+            color: #94a3b8;
+            border: none;
+            border-bottom: 2px solid transparent;
+        }
+
+        .nav-tabs .nav-link.active {
+            background: transparent;
+            color: #38bdf8;
+            border-bottom: 2px solid #38bdf8;
+        }
+
+        .tab-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        /* --- CARDS DE CAPTURA (Estilo Index) --- */
+        .log-item {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-left: 4px solid #38bdf8;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            display: flex;
+            overflow: hidden;
+            transition: all 0.2s;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .log-item:hover {
+            transform: translateX(-5px);
+            border-color: #38bdf8;
+            box-shadow: -5px 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .log-item.buraco {
+            border-left-color: #ef4444;
+        }
+
+        .log-item.bueiro {
+            border-left-color: #22c55e;
+        }
+
+        .log-img-wrapper {
+            width: 110px;
+            min-width: 110px;
+            background: #000;
+            cursor: zoom-in;
+            position: relative;
+        }
+
+        .log-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .log-info {
+            padding: 10px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .log-id {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #94a3b8;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .log-time {
+            font-size: 0.7rem;
+            color: #64748b;
+        }
+
+        .log-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .log-conf {
+            font-size: 0.75rem;
+            background: #334155;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-weight: normal;
+            color: #cbd5e1;
+        }
+
+        .log-dims {
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Controles */
+        .form-label {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-bottom: 2px;
+            font-weight: 600;
+        }
+
+        .form-control,
+        .form-select {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            color: #fff;
+            font-size: 0.9rem;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            background-color: #0f172a;
+            border-color: #38bdf8;
+            color: #fff;
+            box-shadow: none;
+        }
+
+        .form-range::-webkit-slider-thumb {
+            background: #38bdf8;
+        }
+
+        .checkbox-group {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+
+        .form-check-input:checked {
+            background-color: #38bdf8;
+            border-color: #38bdf8;
+        }
+
+        /* Modal Zoom */
+        .modal-zoom {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content-img {
+            margin: auto;
+            display: block;
+            max-width: 95%;
+            max-height: 95vh;
+            border: 2px solid #fff;
+            border-radius: 8px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            color: #fff;
+            font-size: 50px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .close-modal:hover {
+            color: #38bdf8;
+            transform: scale(1.1);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .blinking {
+            animation: blink 1.5s infinite;
+            color: #22c55e;
+            font-weight: bold;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0.5;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <div class="brand"><i class="fas fa-satellite-dish"></i> SALA DE CONTROLE</div>
+        <div id="connection-status" class="text-secondary"><i class="fas fa-circle me-2"></i>Desconectado</div>
+    </div>
+
+    <div id="zoomModal" class="modal-zoom" onclick="this.style.display='none'">
+        <span class="close-modal">&times;</span>
+        <img class="modal-content-img" id="imgZoom">
+    </div>
+
+    <div class="main-layout">
+        <div class="video-panel">
+            <img id="live-feed" src="" alt="Aguardando transmissão...">
+            <div class="overlay-status">
+                <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 4px;">STATUS DO VEÍCULO</div>
+                <div id="car-status" style="color: #64748b; font-weight: bold;">OFFLINE</div>
+            </div>
+        </div>
+
+        <div class="side-panel">
+            <ul class="nav nav-tabs nav-fill" id="myTab" role="tablist">
+                <li class="nav-item"><button class="nav-link active" id="logs-tab" data-bs-toggle="tab"
+                        data-bs-target="#logs-pane" type="button">Capturas</button></li>
+                <li class="nav-item"><button class="nav-link" id="settings-tab" data-bs-toggle="tab"
+                        data-bs-target="#settings-pane" type="button">Ajustes</button></li>
+            </ul>
+
+            <div class="tab-content" id="myTabContent">
+
+                <div class="tab-pane fade show active" id="logs-pane">
+                    <div id="log-list">
+                        <div style="text-align: center; color: #64748b; margin-top: 40px; opacity: 0.7;">
+                            <i class="fas fa-images fa-3x mb-3"></i><br>
+                            Aguardando detecções...
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="settings-pane">
+
+                    <div class="d-flex justify-content-end mb-3">
+                        <button class="btn btn-sm btn-outline-danger" onclick="resetConfig()"><i
+                                class="fas fa-undo me-1"></i> Restaurar Padrões</button>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-warning">Rotação da Câmera (Monitor)</label>
+                        <select id="rotation" class="form-select sync-select">
+                            <option value="0">0º (Normal)</option>
+                            <option value="90">90º (Horário)</option>
+                            <option value="180">180º (Invertido)</option>
+                            <option value="270">270º (Anti-horário)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label d-flex justify-content-between">Buraco (Conf.)<span id="val-buraco"
+                                class="badge bg-primary">25%</span></label>
+                        <input type="range" class="form-range sync-input" id="conf_buraco" min="0.1" max="1.0"
+                            step="0.05">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label d-flex justify-content-between">Bueiro (Conf.)<span id="val-bueiro"
+                                class="badge bg-secondary">30%</span></label>
+                        <input type="range" class="form-range sync-input" id="conf_bueiro" min="0.1" max="1.0"
+                            step="0.05">
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-6"><label class="form-label">Resolução</label><select id="resolution"
+                                class="form-select sync-select">
+                                <option value="640">640p</option>
+                                <option value="736">736p</option>
+                                <option value="1280">1280p</option>
+                            </select></div>
+                        <div class="col-6"><label class="form-label">cm/px</label><input type="number" id="pixel_cm2"
+                                class="form-control sync-input" step="0.01"></div>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <div class="form-check"><input class="form-check-input sync-check" type="checkbox"
+                                id="show_id"><label class="form-check-label small">ID (#)</label></div>
+                        <div class="form-check"><input class="form-check-input sync-check" type="checkbox"
+                                id="show_type"><label class="form-check-label small">Tipo</label></div>
+                        <div class="form-check"><input class="form-check-input sync-check" type="checkbox"
+                                id="show_conf"><label class="form-check-label small">Conf %</label></div>
+                        <div class="form-check"><input class="form-check-input sync-check" type="checkbox"
+                                id="show_dim"><label class="form-check-label small">Dims</label></div>
+                        <div class="form-check"><input class="form-check-input sync-check" type="checkbox"
+                                id="show_area"><label class="form-check-label small">Área</label></div>
+                    </div>
+
+                    <div class="form-check form-switch mb-2"><input class="form-check-input sync-check" type="checkbox"
+                            id="measures"><label class="form-check-label">Calcular Medidas</label></div>
+                    <div class="form-check form-switch mb-2"><input class="form-check-input sync-check" type="checkbox"
+                            id="filter_size" onchange="toggleSizeInput()"><label class="form-check-label">Filtro de
+                            Tamanho</label></div>
+                    <div id="size-input-wrapper"
+                        style="display: none; margin-bottom: 15px; padding-left: 10px; border-left: 2px solid #334155;">
+                        <label class="form-label small">Tamanho Alvo (m)</label>
+                        <input type="number" class="form-control form-control-sm sync-input" id="target_size"
+                            step="0.01" style="background:#1e293b; color:white; border:1px solid #334155;">
+                    </div>
+                    <div class="form-check form-switch mt-3"><input class="form-check-input sync-check" type="checkbox"
+                            id="show_line"><label class="form-check-label text-warning">Ver Linha Disparo</label></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let ws = null;
+        let processedIds = new Set();
+
+        function toggleSizeInput() {
+            const isChecked = document.getElementById('filter_size').checked;
+            document.getElementById('size-input-wrapper').style.display = isChecked ? 'block' : 'none';
+            if (ws && ws.readyState === WebSocket.OPEN && window.isUserInteraction) sendConfig();
+        }
+
+        function connect() {
+            const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            let path = window.location.pathname.replace(/\/monitor\/?$/, '/');
+            if (!path.endsWith('/')) path += '/';
+            const wsUrl = `${proto}//${window.location.host}${path}ws/monitor`;
+
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                document.getElementById('connection-status').innerHTML = '<i class="fas fa-circle me-2 text-success"></i>Online';
+                toggleSizeInput();
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+
+                // Sincroniza Configurações (Sliders e Botões)
+                if (data.type === 'config_update') {
+                    applyConfigToUI(data.data);
+                    return;
+                }
+
+                // Vídeo Ao Vivo
+                if (data.image) {
+                    document.getElementById('live-feed').src = "data:image/jpeg;base64," + data.image;
+                    const st = document.getElementById('car-status');
+                    if (st.innerText !== "TRANSMITINDO") { st.innerText = "TRANSMITINDO"; st.className = "blinking"; st.style.color = "#22c55e"; }
+                }
+
+                // Lista de Capturas (GALERIA)
+                if (data.detections) {
+                    const list = document.getElementById('log-list');
+                    if (list.innerText.includes("Aguardando")) list.innerHTML = "";
+                    data.detections.forEach(det => {
+                        if (!processedIds.has(det.id)) {
+                            processedIds.add(det.id);
+                            addCard(det); // Chama função que cria o card com foto
+                        }
+                    });
+                }
+            };
+
+            ws.onclose = () => {
+                document.getElementById('connection-status').innerHTML = '<i class="fas fa-circle me-2 text-danger"></i>Offline';
+                setTimeout(connect, 2000);
+            };
+        }
+
+        // --- CRIA CARD COM IMAGEM (IGUAL INDEX) ---
+        function addCard(det) {
+            const list = document.getElementById('log-list');
+            const item = document.createElement('div');
+            const isBuraco = det.label === 'BURACO';
+            item.className = `log-item ${isBuraco ? 'buraco' : 'bueiro'}`;
+
+            // Usa imagem enviada pelo server ou placeholder
+            const imgSrc = det.image ? `data:image/jpeg;base64,${det.image}` : '';
+            const time = new Date().toLocaleTimeString();
+
+            item.innerHTML = `
+                <div class="log-img-wrapper" onclick="openZoom('${imgSrc}')">
+                    ${imgSrc ? `<img src="${imgSrc}" class="log-img">` : '<div style="color:#555; padding:10px;">Sem Foto</div>'}
+                </div>
+                <div class="log-info">
+                    <div class="log-header">
+                        <span class="log-id">#${det.id}</span>
+                        <span class="log-time">${time}</span>
+                    </div>
+                    <div class="log-title">
+                        <span>${det.label}</span>
+                        <span class="log-conf">${(det.conf * 100).toFixed(0)}%</span>
+                    </div>
+                    <div class="log-dims">
+                        <i class="fas fa-ruler-combined"></i> ${det.dimensoes || '-'}
+                    </div>
+                </div>
+            `;
+            list.prepend(item);
+            // Limita a 50 itens para não pesar
+            if (list.children.length > 50) list.removeChild(list.lastChild);
+        }
+
+        function openZoom(src) {
+            if (!src) return;
+            document.getElementById('imgZoom').src = src;
+            document.getElementById('zoomModal').style.display = 'block';
+        }
+
+        // --- APLICAÇÃO DE CONFIGURAÇÕES ---
+        function applyConfigToUI(cfg) {
+            window.isUserInteraction = false;
+            document.getElementById('rotation').value = cfg.rotation;
+            document.getElementById('conf_buraco').value = cfg.conf_buraco;
+            document.getElementById('val-buraco').innerText = Math.round(cfg.conf_buraco * 100) + '%';
+            document.getElementById('conf_bueiro').value = cfg.conf_bueiro;
+            document.getElementById('val-bueiro').innerText = Math.round(cfg.conf_bueiro * 100) + '%';
+            document.getElementById('resolution').value = cfg.resolution;
+            document.getElementById('pixel_cm2').value = cfg.pixel_cm2;
+            document.getElementById('measures').checked = cfg.measures;
+            document.getElementById('show_line').checked = cfg.show_line;
+            document.getElementById('filter_size').checked = cfg.filter_size;
+            document.getElementById('target_size').value = cfg.target_size;
+            document.getElementById('show_id').checked = cfg.show_id;
+            document.getElementById('show_type').checked = cfg.show_type;
+            document.getElementById('show_conf').checked = cfg.show_conf;
+            document.getElementById('show_dim').checked = cfg.show_dim;
+            document.getElementById('show_area').checked = cfg.show_area;
+            document.getElementById('size-input-wrapper').style.display = cfg.filter_size ? 'block' : 'none';
+            setTimeout(() => { window.isUserInteraction = true; }, 100);
+        }
+
+        function resetConfig() {
+            if (confirm("Restaurar padrões?")) ws.send(JSON.stringify({ type: 'reset' }));
+        }
+
+        function sendConfig() {
+            if (!ws || ws.readyState !== WebSocket.OPEN) return;
+            const configData = {
+                rotation: parseInt(document.getElementById('rotation').value),
+                conf_buraco: parseFloat(document.getElementById('conf_buraco').value),
+                conf_bueiro: parseFloat(document.getElementById('conf_bueiro').value),
+                resolution: parseInt(document.getElementById('resolution').value),
+                pixel_cm2: parseFloat(document.getElementById('pixel_cm2').value),
+                measures: document.getElementById('measures').checked,
+                show_line: document.getElementById('show_line').checked,
+                filter_size: document.getElementById('filter_size').checked,
+                target_size: parseFloat(document.getElementById('target_size').value),
+                show_id: document.getElementById('show_id').checked,
+                show_type: document.getElementById('show_type').checked,
+                show_conf: document.getElementById('show_conf').checked,
+                show_dim: document.getElementById('show_dim').checked,
+                show_area: document.getElementById('show_area').checked
+            };
+            ws.send(JSON.stringify({ type: 'config', data: configData }));
+        }
+
+        window.isUserInteraction = true;
+        document.querySelectorAll('.sync-input').forEach(el => {
+            el.addEventListener('input', () => {
+                if (!window.isUserInteraction) return;
+                if (el.id === 'conf_buraco') document.getElementById('val-buraco').innerText = Math.round(el.value * 100) + '%';
+                if (el.id === 'conf_bueiro') document.getElementById('val-bueiro').innerText = Math.round(el.value * 100) + '%';
+                sendConfig();
+            });
+        });
+        document.querySelectorAll('.sync-check, .sync-select').forEach(el => {
+            el.addEventListener('change', () => {
+                if (!window.isUserInteraction) return;
+                if (el.id !== 'filter_size') sendConfig();
+            });
+        });
+
+        connect();
+    </script>
+</body>
+
+</html>
